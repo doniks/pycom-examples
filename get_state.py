@@ -48,6 +48,8 @@ print("===== wlan =======================================")
 from network import WLAN
 wlan = WLAN()
 print("is_connected", wlan.isconnected())
+print("bssid", ubinascii.hexlify(wlan.bssid()))
+print("country", wlan.country())
 print("ifconfig", wlan.ifconfig())
 print('IP:', wlan.ifconfig()[0])
 print("mode", wlan.mode(), "(STA=", WLAN.STA, "AP=", WLAN.AP, ")")
