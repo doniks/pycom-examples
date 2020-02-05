@@ -1,6 +1,8 @@
 import os
 import ubinascii
 import machine
+
+
 print("===== machine ====================================")
 print("unique_id", ubinascii.hexlify(machine.unique_id()))
 print("temperature", machine.temperature())
