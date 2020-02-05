@@ -32,17 +32,17 @@ def connect():
         time.sleep(0.25)
     print(" connected after", time.time() - t, "seconds")
 
-def dettach():
+def detach():
     disconnect()
     if ( lte.isattached() ):
-        print("dettach")
+        print("detach")
         # try:
-        lte.dettach()
+        lte.detach()
         #except Exception as ex:
-        #    print("dettach failed:", ex)
+        #    print("detach failed:", ex)
 
 def attach():
-    dettach()
+    detach()
     print("attach ", end="")
     t = time.time()
     if use_nbiot:
@@ -67,20 +67,21 @@ print("init")
 t = time.time()
 try:
     # needed if we Ctrl-C the script and want to rerun
-    dettach()
+    detach()
 except:
     pass
 lte = LTE()
 print("imei", lte.imei())
+attach()
+connect()
 
 ct = 0
-while True:
+#while True:
+for i in range(0, 1):
     print(ct)
-    attach()
-    connect()
     ping()
     ct += 1
     sleep(60)
 
 if disconnect_detach:
-    dettach()
+    detach()
