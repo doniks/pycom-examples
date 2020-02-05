@@ -27,6 +27,7 @@ else:
             break
 
 print("WLAN connected:", wlan.ssid(), wlan.ifconfig() )
+print(wlan.ifconfig()[0] )
 
 # s = socket.socket()
 # ss = ssl.wrap_socket(s)
