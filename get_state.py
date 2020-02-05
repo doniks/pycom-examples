@@ -72,11 +72,14 @@ print("mac", ubinascii.hexlify(sigfox.mac()))
 print("pac", ubinascii.hexlify(sigfox.pac()))
 print("frequencies", sigfox.frequencies())
 
-print("===== lte ========================================")
-from network import LTE
-lte = LTE()
-print("imei", lte.imei())
-print("is_connected", lte.isconnected())
-print("ue_coverage", lte.ue_coverage())
-print("iccid", lte.iccid())
-print("time", lte.time())
+try:
+    print("===== lte ========================================")
+    from network import LTE
+    lte = LTE()
+    print("imei", lte.imei())
+    print("is_connected", lte.isconnected())
+    print("ue_coverage", lte.ue_coverage())
+    print("iccid", lte.iccid())
+    print("time", lte.time())
+except:
+    pass
