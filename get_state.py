@@ -11,6 +11,7 @@ print("temperature", machine.temperature())
 print("===== os =========================================")
 print("sysname", os.uname().sysname) # e.g., GPy
 print("release", os.uname().release) # e.g., 1.20.1.r1
+print("release", os.uname().version)
 print("uname", os.uname())
 
 import pycom
@@ -29,6 +30,9 @@ elif (pycom.ota_slot() == 0x10000):
     print("ota_slot is", "'Factory'")
 else:
     raise Exception("Unkown ota_slot"+ str(pycom.ota_slot()))
+
+print("smart_config_on_boot", pycom.smart_config_on_boot())
+print("pybytes_on_boot", pycom.pybytes_on_boot())
 
 print("wifi_on_boot", pycom.wifi_on_boot())
 try:
