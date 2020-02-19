@@ -1,17 +1,24 @@
 from network import Sigfox
 import socket
+
+downlink = True
+
+​print("init")
+sigfox = Sigfox(mode=Sigfox.SIGFOX, rcz=Sigfox.RCZ1) # rcz1 Europe
+print("id", ubinascii.hexlify(sigfox.id()))
+print("pac", ubinascii.hexlify(sigfox.pac()))
 ​
-# init Sigfox for RCZ1 (Europe)
-sigfox = Sigfox(mode=Sigfox.SIGFOX, rcz=Sigfox.RCZ1)
-​
-# create a Sigfox socket
+print("socket")
 s = socket.socket(socket.AF_SIGFOX, socket.SOCK_RAW)
-​
-# make the socket blocking
 s.setblocking(True)
 ​
-# configure it as uplink only
-s.setsockopt(socket.SOL_SIGFOX, socket.SO_RX, False)
-​
-# send some bytes
-s.send(bytes([1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12]))
+if downlink:
+    s.setsockopt(socket.SOL_SIGFOX, socket.SO_RX, True)
+    print("send")
+    s.send(bytes([1, 4, 12]))
+    x = s.recv(64)
+    print("received", ubinascii.hexlify(x))
+else:
+    s.setsockopt(socket.SOL_SIGFOX, socket.SO_RX, False)
+    print("send")
+    s.send(bytes([1, 4, 3]))
