@@ -60,34 +60,38 @@ print("ifconfig", wlan.ifconfig())
 print('IP:', wlan.ifconfig()[0])
 print("mode", wlan.mode(), "(STA=", WLAN.STA, "AP=", WLAN.AP, ")")
 
+try:
+    print("===== lora =======================================")
+    from network import LoRa
+    lora = LoRa(mode=LoRa.LORAWAN, region=LoRa.EU868)
+    print("mac", ubinascii.hexlify(lora.mac()))
+    print(lora.frequency())
+    print(lora.has_joined())
+    print(lora.tx_power())
+    print(lora.power_mode())
+    #print(lora.stats())
+except:
+    pass
 
-print("===== lora =======================================")
-from network import LoRa
-lora = LoRa(mode=LoRa.LORAWAN, region=LoRa.EU868)
-print("mac", ubinascii.hexlify(lora.mac()))
-print(lora.frequency())
-print(lora.has_joined())
-print(lora.tx_power())
-print(lora.power_mode())
-#print(lora.stats())
-
-
-print("===== sigfox =====================================")
-from network import Sigfox
-sigfox = Sigfox(mode=Sigfox.SIGFOX, rcz=Sigfox.RCZ1)
-print("id", ubinascii.hexlify(sigfox.id()))
-print("mac", ubinascii.hexlify(sigfox.mac()))
-print("pac", ubinascii.hexlify(sigfox.pac()))
-print("frequencies", sigfox.frequencies())
+try:
+    print("===== sigfox =====================================")
+    from network import Sigfox
+    sigfox = Sigfox(mode=Sigfox.SIGFOX, rcz=Sigfox.RCZ1)
+    print("id", ubinascii.hexlify(sigfox.id()))
+    print("mac", ubinascii.hexlify(sigfox.mac()))
+    print("pac", ubinascii.hexlify(sigfox.pac()))
+    print("frequencies", sigfox.frequencies())
+except:
+    pass
 
 try:
     print("===== lte ========================================")
     from network import LTE
     lte = LTE()
     print("imei", lte.imei())
+    print("iccid", lte.iccid())
     print("is_connected", lte.isconnected())
     print("ue_coverage", lte.ue_coverage())
-    print("iccid", lte.iccid())
-    print("time", lte.time())
+    # print("time", lte.time())
 except:
     pass
