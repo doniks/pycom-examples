@@ -3,8 +3,8 @@ import ssl
 import time
 from network import LTE
 
-# choose nbiot or catm1
-use_nbiot = True
+APN="spe.inetd.vodafone.nbiot"
+BAND=20
 disconnect_detach = True
 
 def sleep(s):
@@ -45,10 +45,7 @@ def attach():
     detach()
     print("attach ", end="")
     t = time.time()
-    if use_nbiot:
-        lte.attach(band=20, apn="spe.inetd.vodafone.nbiot")
-    else:
-        lte.attach()
+    lte.attach(band=BAND, apn=APN)
     while not lte.isattached():
         print(".", end="")
         time.sleep(0.25)
