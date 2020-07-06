@@ -1,6 +1,9 @@
 import machine
 import time
+import os
 from network import WLAN
+import socket
+import binascii
 
 known_nets_dict = {
     # 'ssid2': {'pwd': 'password2', 'wlan_config':  ('10.0.0.114', '255.255.0.0', '10.0.0.1', '10.0.0.1')}, # (ip, subnet_mask, gateway, DNS_server)
@@ -51,6 +54,7 @@ def wlan_connect():
             sec = [e.sec for e in available_nets_list if e.ssid == net_to_use][0]
             if 'wlan_config' in net_properties:
                 wlan.ifconfig(config=net_properties['wlan_config'])
+            print("connect", net_to_use, sec, pwd)
             wlan.connect(net_to_use, (sec, pwd))
             ct = 0;
             while not wlan.isconnected():
@@ -77,6 +81,8 @@ def wlan_connect():
             print("Error while trying to connect to Wlan:", e)
             return False
 
+def wlan_deinit():
+    wlan.deinit()
 
 if __name__ == "__main__":
     import binascii
