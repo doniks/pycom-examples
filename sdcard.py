@@ -2,7 +2,10 @@ from machine import SD
 import os
 
 sd = SD()
-os.mount(sd, '/sd')
+try:
+    os.mount(sd, '/sd')
+except Exception as e:
+    print("Exception while trying to mount (maybe it's mounted already):", e)
 
 # check the content
 print(os.listdir('/sd'))
