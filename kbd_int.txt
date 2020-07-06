@@ -1,0 +1,8 @@
+https://github.com/pycom/pycom-micropython-sigfox/issues/431
+Pushing Ctrl-F in REPL causes a safe-boot
+which is permanent until the reset button is pressed or machine.reset() is called.
+
+Calling micropython.kbd_intr(-1) disables this special behavior of both Ctrl-F and Ctr-C, again until restart.
+You can call kbd_int() with two arguments.
+Then the second will set the soft-reset char, like
+kbd_intr(3, -1) will disable Ctrl-F, but only until the REPL prompt comes back.
