@@ -9,7 +9,7 @@
 #             |----------------|            |                |
 #                                           |----------------|
 #
-#
+# minicom -oD /dev/ttyUSB0 -b 9600
 import pycom
 import time
 from machine import UART
@@ -25,34 +25,43 @@ r = str(machine.rng())
 # uart0.write(r)
 # uart0.write(")\n\r")
 
-uart1 = UART(1, baudrate=9600, timeout_chars=10)
+print("uart1 init")
+# uart1 = UART(1, baudrate=9600, timeout_chars=10)
+uart1 = UART(1, baudrate=9600, pins=('P23', 'P22'))
 uart1.write("Hello UART 1 (")
 uart1.write(r)
 uart1.write(")\n\r")
+print("uart1 init done")
 
+print("uart2 init")
+# On the GPy/FiPy UART2 is unavailable because it is used to communicate with the cellular radio.
+# pins=(TXD, RXD, RTS, CTS)
 uart2 = UART(2, baudrate=9600, pins=('P8', 'P9'))
 uart2.write("Hello UART 2 (")
 uart2.write(r)
 uart2.write(")\n\r")
+print("uart2 init done")
 
-while True:
-    line = uart1.readline()
-    if line == None:
-        time.sleep(1)
-        print(".", end="")
-        # uart0.write("0")
-        uart1.write("1")
-        uart2.write("2")
-    else:
-        color = line.strip()
-        if color == b'red' or color == b'r':
-            print("red")
-            pycom.heartbeat(False)
-            pycom.rgbled(0x330000)
-        if color == b'blue' or color == b'b':
-            print("blue")
-            pycom.heartbeat(False)
-            pycom.rgbled(0x000033)
-        else:
-            pycom.heartbeat(True)
-            print("Don't understand \"", color, "\"", sep="")
+
+#
+# while True:
+#     line = uart1.readline()
+#     if line == None:
+#         time.sleep(1)
+#         print(".", end="")
+#         # uart0.write("0")
+#         uart1.write("1")
+#         uart2.write("2")
+#     else:
+#         color = line.strip()
+#         if color == b'red' or color == b'r':
+#             print("red")
+#             pycom.heartbeat(False)
+#             pycom.rgbled(0x330000)
+#         if color == b'blue' or color == b'b':
+#             print("blue")
+#             pycom.heartbeat(False)
+#             pycom.rgbled(0x000033)
+#         else:
+#             pycom.heartbeat(True)
+#             print("Don't understand \"", color, "\"", sep="")
