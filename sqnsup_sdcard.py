@@ -40,8 +40,8 @@ use_recovery = False
 # choose whether you want to use full image or diff image
 use_full = True
 # choose target version
-# ver = 'NB1-41019'
-ver = 'CATM1-41065'
+ver = 'NB1-41019'
+# ver = 'CATM1-41065'
 # run upgrade in debug mode or not
 dbg = True
 ###########
@@ -50,9 +50,16 @@ full = dv + ver + ".dup"
 diff = dv + "upgdiff_33080-to-41019.dup"
 updater = dv + "updater.elf"
 
+
+############ main
 # list and let it raise an exception if it doesn't exist
-print("full", full, os.stat(full)[6]/1024, "KB")
-print("updater", updater, os.stat(updater)[6]/1024, "KB")
+if use_recovery:
+    print("updater", updater)
+    print("updater", updater, os.stat(updater)[6]/1024, "KB")
+else:
+    print("full", full)
+    print("full", full, os.stat(full)[6]/1024, "KB")
+
 
 print("sys", os.uname().sysname)
 print("unique_id", binascii.hexlify(machine.unique_id()))
