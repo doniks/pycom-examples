@@ -1,6 +1,10 @@
 import pycom
 import machine
 
+#########################################################
+##### SWITCHING FILESYSTEM MEANS LOSING ALL FILES ! #####
+#########################################################
+
 def switch_to(name, type):
     current_name = pycom.bootmgr()[1]
     if current_name != name:
@@ -9,7 +13,6 @@ def switch_to(name, type):
         machine.reset()
     else:
         print("Nothing to do, already on", name)
-
 
 def switch_to_FAT():
     switch_to("FAT", pycom.FAT)
