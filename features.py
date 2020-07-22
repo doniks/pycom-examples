@@ -22,6 +22,22 @@ def features():
     print("wdt", pycom.wdt_on_boot())
     print("wifi", pycom.wifi_on_boot())
 
+def on():
+    pycom.heartbeat_on_boot(True)
+    pycom.lte_modem_en_on_boot(True)
+    pycom.pybytes_on_boot(True)
+    pycom.smart_config_on_boot(True)
+    pycom.wdt_on_boot(True)
+    pycom.wifi_on_boot(True)
+
+def off():
+    pycom.heartbeat_on_boot(False)
+    pycom.lte_modem_en_on_boot(False)
+    pycom.pybytes_on_boot(False)
+    pycom.smart_config_on_boot(False)
+    pycom.wdt_on_boot(False)
+    pycom.wifi_on_boot(False)
+
 import binascii
 import machine
 uid = binascii.hexlify(machine.unique_id())
