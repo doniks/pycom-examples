@@ -32,8 +32,8 @@ if "LR5.1.1.0-33080" in a:
 
 print("############ info")
 sqnsupgrade.info()
-print("state", sqnsupgrade.state())
-print("imei", sqnsupgrade.imei())
+#print("state", sqnsupgrade.state())
+#print("imei", sqnsupgrade.imei())
 # load
 # reconnect_uart
 print("release", sqnsupgrade.release)
@@ -44,4 +44,4 @@ print("VERSION", sqnsupgrade.VERSION)
 # uart
 
 #print("############ info debug")
-#info = sqnsupgrade.info(debug=True)
+sqnsupgrade.info(debug=True)

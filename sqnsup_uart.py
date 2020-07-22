@@ -27,7 +27,8 @@ ver = 'CATM1-41065'
 # run upgrade in debug mode or not
 dbg = True
 # serial port
-ser = '/dev/ttyACM0'
+serial_port = '/dev/ttyACM0'
+serial_port = '/dev/ttyUSB2'
 # where are the FW images stored
 dir='/home/peter/docs/FirmwareReleases/sequans'
 
@@ -65,7 +66,7 @@ try:
         import sqnsupgrade
         sqnsupgrade.uart(debug=dbg)
 except:
-    print("sqnsup_uart.py is running on host")
+    print("sqnsup_uart.py is running on desktop")
 
     # list and let it raise an exception if it doesn't exist
     if use_recovery:
@@ -78,15 +79,15 @@ except:
     x = time.time()
     if use_full:
         if use_recovery:
-            print("full, recovery", ser, full, updater)
-            sqnsupgrade.run(ser, full, updater, debug=dbg)
+            print("full, recovery", serial_port, full, updater)
+            sqnsupgrade.run(serial_port, full, updater, debug=dbg)
         else:
-            print("full, normal", ser, full)
-            sqnsupgrade.run(ser, full, debug=dbg)
+            print("full, normal", serial_port, full)
+            sqnsupgrade.run(serial_port, full, debug=dbg)
     else:
         if use_recovery:
             print("diff update with recovery is NOT SUPPORTED (I think :-P)")
         else:
-            print("diff, normal", ser, diff)
-            sqnsupgrade.run(ser, diff, debug=dbg)
+            print("diff, normal", serial_port, diff)
+            sqnsupgrade.run(serial_port, diff, debug=dbg)
     print("upgrade finished after", time.time() - x , "seconds")
