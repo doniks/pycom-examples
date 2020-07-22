@@ -54,7 +54,7 @@ def wlan_connect():
             sec = [e.sec for e in available_nets_list if e.ssid == net_to_use][0]
             if 'wlan_config' in net_properties:
                 wlan.ifconfig(config=net_properties['wlan_config'])
-            print("connect", net_to_use, sec, pwd)
+            # print("connect", net_to_use, sec, pwd)
             wlan.connect(net_to_use, (sec, pwd))
             ct = 0;
             while not wlan.isconnected():
