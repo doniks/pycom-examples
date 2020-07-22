@@ -9,6 +9,8 @@ pycom.heartbeat(False)
 pycom.rgbled(0x000005)
 
 print("boot.py:importing shell tools")
+
+# posix like commands
 try: from cat import cat
 except: pass
 try: from cd import cd
@@ -28,6 +30,7 @@ except: pass
 try: from rm import rm
 except: pass
 
+# custom pycom dev board commands
 try: from blink import blink
 except: pass
 try: from sdcard import sd
@@ -36,4 +39,7 @@ try: from dns import dns
 except: pass
 try: from whoami import whoami
 except: pass
+try: from hexdump import hexdump
+except:pass
+
 print("boot.py:done")
