@@ -32,7 +32,7 @@ if __name__ == "__main__":
     import pycom
     pycom.get_free_heap()
 
-    if False:
+    if True:
         start_pybytes()
     else:
         import _thread
