@@ -1,4 +1,5 @@
 def whoami():
+    import machine
     import binascii
     import os
     uid = binascii.hexlify(machine.unique_id())

@@ -1,5 +1,5 @@
 
-def dns(host, attempts=3):
+def dns(host='pycom.io', attempts=3):
     import socket
     import time
     import os

@@ -5,4 +5,5 @@ def rm(file):
     os.unlink(file)
 
 if __name__ == "__main__":
-    rm('/flash/main.py')
+    #rm('/flash/main.py')
+    rm('/flash/diff.dup')

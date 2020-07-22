@@ -1,7 +1,7 @@
 import pycom
 import time
 
-def blink(repetitions=7, color=0x330033, on_ms=100, off_ms=100 ):
+def blink(repetitions=5, color=0x330033, on_ms=100, off_ms=100 ):
     hb = pycom.heartbeat()
     pycom.heartbeat(False)
 
@@ -18,9 +18,7 @@ if __name__ == "__main__":
     import os
     import binascii
     import machine
-    uid = binascii.hexlify(machine.unique_id())
-    name = os.uname().sysname.lower() + '-' + uid.decode("utf-8")[-4:]
-    print(name, "blink.py")
+    print(os.uname().sysname.lower() + '-' + binascii.hexlify(machine.unique_id()).decode("utf-8")[-4:], "blink.py")
     print(os.uname())
     blink()
     # 0xffff00 # yellow

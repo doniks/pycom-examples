@@ -8,5 +8,8 @@ def mkdir(dir):
     else:
         os.mkdir(dir)
 
+def rmdir(dir):
+    os.rmdir(dir)
+
 if __name__ == "__main__":
     mkdir('/flash/test/')
