@@ -1,6 +1,6 @@
 from network import LTE
 
-def send_at_cmd_pretty(cmd, verbose=True):
+def at(cmd, verbose=True):
     response = lte.send_at_cmd(cmd).split('\r\n')
     retval = ""
     for line in response:
@@ -19,7 +19,7 @@ def send_at_cmd_pretty(cmd, verbose=True):
 lte = LTE()
 print("imei", lte.imei())
 
-send_at_cmd_pretty("AT+CPSMS=?")
+at("AT+CPSMS=?")
 # +CPSMS: (0-2), , ,("00000000"-"11111111"),("00000000"-"11111111")
 #         modes 0-2
 #               ^no Periodic-RAU values
@@ -37,10 +37,10 @@ send_at_cmd_pretty("AT+CPSMS=?")
 #  1 enable PSM
 #  2 ?
 
-send_at_cmd_pretty("AT+CPSMS?")
+at("AT+CPSMS?")
 # +CPSMS: 0,,,"10100011","00100001"
 
-send_at_cmd_pretty("AT+CREG=?")
+at("AT+CREG=?")
 # supported n's: (0,1,2)
 # Set command controls the presentation of an
 # * unsolicited result code
@@ -53,7 +53,7 @@ send_at_cmd_pretty("AT+CREG=?")
 #   there is a change of the network cell in GERAN/UTRAN/E-UTRAN. The parameters <AcT>, <lac> and <ci> are sent only if available.
 # * The value <n>=3 further extends the unsolicited result code with
 #   [,<cause_type>,<reject_cause>], when available, when the value of <stat> changes.
-send_at_cmd_pretty("AT+CREG?")
+at("AT+CREG?")
 
 
 for n in range(0,8):
@@ -67,9 +67,9 @@ for n in range(0,8):
     # 5 UTRAN w/HSUPA
     # 6 UTRAN w/HSDPA and HSUPA
     # 7 E-UTRAN
-    x = send_at_cmd_pretty("AT+CREG=" + str(n))
+    x = at("AT+CREG=" + str(n))
     print(x)
-    creg = send_at_cmd_pretty("AT+CREG?", True)
+    creg = at("AT+CREG?", True)
     creg.split(" ")
     (cregn, stat) = creg.split(" ")[1].split(",")
     if (int(cregn) != n):
@@ -108,68 +108,75 @@ for n in range(0,8):
     print(n, N, s, S)
 
 
-send_at_cmd_pretty("AT+CEREG=?") # in E-UTRAN:      i) Active Time value and ii) the extended periodic TAU value that are allocated to the UE by the network
-send_at_cmd_pretty("AT+CEREG?")
+at("AT+CEREG=?") # in E-UTRAN:      i) Active Time value and ii) the extended periodic TAU value that are allocated to the UE by the network
+at("AT+CEREG?")
 
-send_at_cmd_pretty("AT+CGREG=?") # in GERAN/UTRAN : i) Active Time value, ii) the extended periodic RAU value and iii) the GPRS READY timer value that are allocated to the UE by the network
-send_at_cmd_pretty("AT+CGREG?")
+at("AT+CGREG=?") # in GERAN/UTRAN : i) Active Time value, ii) the extended periodic RAU value and iii) the GPRS READY timer value that are allocated to the UE by the network
+at("AT+CGREG?")
 
-send_at_cmd_pretty("AT")
+at("AT")
 
 print("is_connected", lte.isconnected())
 print("ue_coverage", lte.ue_coverage())
 print("iccid", lte.iccid())
 print("time", lte.time())
 
+print(lte.send_at_cmd('AT!="IP::ping 8.8.8.8"'))
 
-send_at_cmd_pretty('AT+CGMI')
+at('AT+CGMI')
 # PYCOM
-send_at_cmd_pretty('AT+CGMM')
+at('AT+CGMM')
 # FiPy
-send_at_cmd_pretty('AT+CGMR')
+at('AT+CGMR')
 # UE5.0.0.0d
-send_at_cmd_pretty('AT+CGSN=0')
 
-send_at_cmd_pretty('AT+CGSN=1')
-
-send_at_cmd_pretty('AT+CGSN=2')
-
-send_at_cmd_pretty('AT+CGSN=3')
+# imei
+at('AT+CGSN=0')
+at('AT+CGSN=1')
+at('AT+CGSN=2')
+at('AT+CGSN=3')
 # +CGSN: "00"
-send_at_cmd_pretty('AT+CIMI')
 
-send_at_cmd_pretty('AT+CPINR')
+at('AT+CIMI')
+
+at('AT+CPINR')
 # +CPINR: SIM PIN,3,3
 # +CPINR: SIM PUK,10,10
 # +CPINR: SIM PIN2,3,3
 # +CPINR: SIM PUK2,10,10
-send_at_cmd_pretty('AT+CSQ')
+at('AT+CSQ')
 # +CSQ: 99,99
-send_at_cmd_pretty('AT+CFUN?')
+at('AT+CFUN?')
 # +CFUN: 4
 
-send_at_cmd_pretty("AT+CEREG?")
+at("AT+CEREG?")
 # +CEREG:
 # n=2 ... enable network registration and location information unsolicited result code
-# stat=5 ... registered, roaming
+# stat=
+#    0 ... not reg
+#    1 ... regisered, home
+#    5 ... registered, roaming
 # tac="B7B6" ... two byte tracking area code in hexadecimal format
 # ci="0010581F" ... four byte E-UTRAN cell ID in hexadecimal format
 # AcT=9 ... 9 undefined ???
 
+at('AT+COPN') # print Operator Names
+at('AT+COPS?')
+at('AT+COPL?')
+at('AT+CPLS?')
 
 
+at('AT!="fsm"')
 
-send_at_cmd_pretty('AT!="fsm"')
+at('AT!="showphy"')
 
-send_at_cmd_pretty('AT!="showphy"')
+at('AT+SQNLED=?')
+at('AT+SQNLED?')
 
-send_at_cmd_pretty('AT+SQNLED=?')
-send_at_cmd_pretty('AT+SQNLED?')
+at('AT+SQNOMAHDEV=?')
+at('AT+SQNOMAHDEV?')
 
-send_at_cmd_pretty('AT+SQNOMAHDEV=?')
-send_at_cmd_pretty('AT+SQNOMAHDEV?')
+at('AT+GSN')
 
-send_at_cmd_pretty('AT+GSN')
-
-send_at_cmd_pretty('AT+CGPADDR')
+at('AT+CGPADDR')
 # '\r\n+CGPADDR: 1,"10.0.1.197"\r\n\r\nOK\r\n'

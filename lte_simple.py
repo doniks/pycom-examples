@@ -35,6 +35,7 @@ while not lte.isattached():
     print(".", end="")
     time.sleep(1)
 print(time.time() - t, "seconds")
+print(lte.time())
 
 
 print("connect", end="")
