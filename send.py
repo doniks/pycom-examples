@@ -4,11 +4,11 @@ import binascii
 import time
 import struct
 
-port = 6661
+port = 5555
 #use = "TCP"
 use = "UDP"
-size = 2000 # how many bytes to send in one packet
-count = 3 # how many packets to send
+size = 10 # how many bytes to send in one packet
+count = 300 # how many packets to send
 
 # configure IP of remote host
 try:
@@ -17,7 +17,8 @@ try:
     import os
     uid = binascii.hexlify(machine.unique_id())
     print(os.uname().sysname, uid, "send.py")
-    host = '10.0.103.1'
+    # host = '10.0.103.1'
+    host = '80.101.10.222' # public IP Peters apartment
 except:
     # script is running on the laptop
     print("Laptop", "send.py")
@@ -27,7 +28,7 @@ except:
 print(host, port)
 
 payload = bytes([])
-for x in range(size):
+for x in range(size-1): # -1 because we prefix it with the counter
     payload += bytes([x % 256])
 print(binascii.hexlify(payload))
 
@@ -47,7 +48,6 @@ def send(s, c=0):
     #S = 0.01 # too fast
     # S = 0.2
     time.sleep(S)
-
 
 def udp():
     print("UDP")

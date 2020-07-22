@@ -4,7 +4,7 @@ import struct
 import time
 import binascii
 
-port = 6661
+port = 5555
 use = "TCP"
 use = "UDP"
 count = 10000000 # how many packets to receive
@@ -24,7 +24,8 @@ except:
     # script is running on the laptop
     print("Laptop", "recv.py")
     # host = '127.0.0.1'
-    host = '10.0.103.1'
+    # host = '10.0.103.1'
+    host = '192.168.178.81' # dell laptop in peter's apartment
 
 print(host, port)
 
@@ -33,17 +34,27 @@ try:
 except:
     pass
 
+seq = None
 
 def recv(s):
+    global seq
     try:
-        print("recv", t)
+        # print("recv", t)
         M = s.recv(4000)
-        print("recieved", binascii.hexlify(M))
+        print("recieved", len(M), binascii.hexlify(M), end=' ')
+        newseq = M[0]
+        if newseq == seq + 1:
+            print("next", end=' ')
+        else:
+            print("start", end=' ')
+        print(newseq)
+        seq = newseq
         time.sleep(0.001)
         return True;
     except Exception as e:
         # maybe there was nothing sent, and recv timed out
-        print("could not recv", e)
+        print("could not recv:", e)
+        seq = None
     return False
 
 
