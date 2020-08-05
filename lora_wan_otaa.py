@@ -36,6 +36,8 @@ lora = LoRa(mode=LoRa.LORAWAN, region=LoRa.EU868)
 device_eui = binascii.hexlify(lora.mac()).upper().decode('utf-8')
 print("device_eui", device_eui)
 
+name = os.uname().sysname.lower() + '-' + uid.decode("utf-8")[-4:]
+print("name", name)
 
 config = dict()
 
