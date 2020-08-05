@@ -6,4 +6,5 @@ def rm(file):
 
 if __name__ == "__main__":
     #rm('/flash/main.py')
-    rm('/flash/diff.dup')
+    # rm('/flash/diff.dup')
+    rm("/flash/OTA_VERSION.py")

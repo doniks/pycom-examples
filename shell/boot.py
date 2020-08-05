@@ -41,5 +41,7 @@ try: from whoami import whoami
 except: pass
 try: from hexdump import hexdump
 except:pass
+try: from ntp import *
+except:pass
 
 print("boot.py:done")

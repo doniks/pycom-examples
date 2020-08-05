@@ -55,4 +55,5 @@ if __name__ == "__main__":
     # hexdump("/flash/test/test.bin.up")
     # hexdump("/flash/test/http_get.recv")
     # cat("/flash/log_GPy_240ac4c7b250.log")
-    hexdump("/flash/up41065.elf", head=2000)
+    # hexdump("/flash/up41065.elf", head=2000)
+    hexdump('ever')

@@ -10,30 +10,31 @@ known_nets_dict = {
     'MySSID': {'pwd': 'MyPASSWORD'},
 }
 
+w = None
 connection = ""
 IP = ""
 
-def wlan_connect():
-    global connection, IP
+def connect():
+    global connection, IP, w
     print("Initialise WiFi")
-    wlan = WLAN() # antenna=WLAN.EXT_ANT)
-    wlan.hostname(binascii.hexlify(machine.unique_id()) + "." + os.uname().sysname + "." + "wlan")
-    # print("ap_mac", binascii.hexlify(wlan.mac().ap_mac))
-    # print("sta_mac", binascii.hexlify(wlan.mac().sta_mac))
-    if ( wlan.mode() == WLAN.AP ):
+    w = WLAN() # antenna=WLAN.EXT_ANT)
+    w.hostname(binascii.hexlify(machine.unique_id()) + "." + os.uname().sysname + "." + "w")
+    # print("ap_mac", binascii.hexlify(w.mac().ap_mac))
+    # print("sta_mac", binascii.hexlify(w.mac().sta_mac))
+    if ( w.mode() == WLAN.AP ):
         print("switch from AP to STA_AP")
-        wlan.mode(WLAN.STA_AP)
-    original_ssid = wlan.ssid()
-    original_auth = wlan.auth()
+        w.mode(WLAN.STA_AP)
+    original_ssid = w.ssid()
+    original_auth = w.auth()
 
-    if wlan.isconnected():
+    if w.isconnected():
         print("currently connected ... disconnecting")
-        wlan.disconnect()
-        while wlan.isconnected():
+        w.disconnect()
+        while w.isconnected():
             time.sleep_ms(200)
 
     print("Scanning for wifi networks")
-    available_nets_list = wlan.scan()
+    available_nets_list = w.scan()
     available_ssids_set = frozenset([n.ssid for n in available_nets_list])
     known_ssids_set = frozenset([key for key in known_nets_dict])
     # make the intersection
@@ -53,23 +54,23 @@ def wlan_connect():
             pwd = net_properties['pwd']
             sec = [e.sec for e in available_nets_list if e.ssid == net_to_use][0]
             if 'wlan_config' in net_properties:
-                wlan.ifconfig(config=net_properties['wlan_config'])
+                w.ifconfig(config=net_properties['wlan_config'])
             # print("connect", net_to_use, sec, pwd)
-            wlan.connect(net_to_use, (sec, pwd))
+            w.connect(net_to_use, (sec, pwd))
             ct = 0;
-            while not wlan.isconnected():
+            while not w.isconnected():
                 ct += 1
                 # print(".", end="")
                 machine.idle()  # save power while waiting
                 time.sleep_ms(200)
-            print("Connected", ct) # , "(", wlan.ifconfig(), ")")
+            print("Connected", ct) # , "(", w.ifconfig(), ")")
             connection = "WLAN"
             ct = 0
-            IP = wlan.ifconfig()[0]
+            IP = w.ifconfig()[0]
             while IP == "0.0.0.0":
                 ct += 1
                 machine.idle()
-                IP = wlan.ifconfig()[0]
+                IP = w.ifconfig()[0]
                 time.sleep_ms(100)
             print("Connected to", net_to_use,
                   "with IP address:", IP, ct)
@@ -81,8 +82,11 @@ def wlan_connect():
             print("Error while trying to connect to Wlan:", e)
             return False
 
+def ip():
+    return w.ifconfig()[0]
+
 def wlan_deinit():
-    wlan.deinit()
+    w.deinit()
 
 if __name__ == "__main__":
     import binascii
@@ -92,4 +96,4 @@ if __name__ == "__main__":
     print(os.uname().sysname, uid, name, "main.py")
     print("sys", os.uname().sysname)
     print("unique_id", binascii.hexlify(machine.unique_id()))
-    wlan_connect()
+    connect()
