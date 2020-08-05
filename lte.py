@@ -1,5 +1,4 @@
 import socket
-# import ssl
 import time
 import binascii
 from network import LTE
@@ -12,7 +11,9 @@ print("release", os.uname().release)
 
 
 APN="spe.inetd.vodafone.nbiot"
+APN=""
 BAND=20
+BAND=""
 disconnect_detach = True
 
 def sleep(s):
@@ -23,15 +24,15 @@ def sleep(s):
         s -= 1
     print("")
 
-def disconnect():
+def disconnect(lte):
     if ( lte.isconnected() ):
         print("disconnect ", end="")
         t = time.time()
         lte.disconnect()
         print(" disconnected after", time.time() - t, "seconds")
 
-def connect():
-    disconnect()
+def connect(lte):
+    disconnect(lte)
     print("connect ", end="")
     t = time.time()
     lte.connect()
@@ -39,9 +40,15 @@ def connect():
         print(".", end="")
         time.sleep(0.25)
     print(" connected after", time.time() - t, "seconds")
+    try:
+        # older sqns fw does not support pppsuspend
+        ifconfig_suspend(lte)
+    except:
+        pass
 
-def detach():
-    disconnect()
+
+def detach(lte):
+    disconnect(lte)
     if ( lte.isattached() ):
         print("detach")
         # try:
@@ -49,11 +56,32 @@ def detach():
         #except Exception as ex:
         #    print("detach failed:", ex)
 
-def attach():
-    detach()
+def ifconfig(lte):
+    for attempt in range(0,3):
+        try:
+            print(lte.send_at_cmd('AT+CGCONTRDP=1'))
+            # '\r\n+CGCONTRDP: 1,5,"spe.inetd.vodafone.nbiot.mnc028.mcc901.gprs","10.175.213.177.255.255.255.255","","10.105.16.254","10.105.144.254","","",,,1430\r\n\r\nOK\r\n'
+            # lte.send_at_cmd('AT+CGDCONT?')
+            # '\r\n+CGDCONT: 1,"IP","spe.inetd.vodafone.nbiot",,,,0,0,0,0,0,0,1,,0\r\n\r\nOK\r\n'
+            print(lte.send_at_cmd('AT!="ifconfig"'))
+            return
+        except Exception as ex:
+            print("ifconfig Exception:", ex)
+    raise Exception("Could not ifconfig")
+
+def ifconfig_suspend(lte):
+    lte.pppsuspend()
+    ifconfig(lte)
+    lte.pppresume()
+
+def attach(lte):
+    detach(lte)
     print("attach ", end="")
     t = time.time()
-    lte.attach(band=BAND, apn=APN, type=LTE.IP)
+    if BAND:
+        lte.attach(band=BAND, apn=APN) #, type=LTE.IP)
+    else:
+        lte.attach()
     while not lte.isattached():
         print(".", end="")
         time.sleep(0.25)
@@ -93,31 +121,30 @@ def dns():
     print(" completed after", time.time() - t, "seconds")
     print(host, ip)
 
+def lte_connect():
+    print("init")
+    t = time.time()
+    try:
+        # try to detach, in case the script was Ctrl-C-ed and is rerun
+        detach(lte)
+        print("detached")
+    except:
+        pass
+
+    lte = LTE() # debug=True) # carrier=None, cid=1)
+    # print("imei", lte.imei())
+    attach(lte)
+    # lte.init(debug=True)
+    connect(lte)
+    # host = 'google.com'
+    # print(host, socket.getaddrinfo(host,80))
+    return True
+
+
 ############################# main ##########################
-print("init")
-t = time.time()
-try:
-    # try to detach, in case the script was Ctrl-C-ed and is rerun
-    detach()
-    print("detached")
-except:
-    pass
+if __name__ == "__main__":
+    lte_connect()
 
-lte = LTE(debug=False) # carrier=None, cid=1)
-# print("imei", lte.imei())
-attach()
-lte.init(debug=False)
-connect()
-
-ct = 0
-#while True:
-for i in range(0, 3):
-    print(ct)
-    dns()
-    http_get()
-    ct += 1
-    #sleep(60)
-
-if disconnect_detach:
-    disconnect()
-    detach()
+    if False:
+        disconnect(lte)
+        detach(lte)
