@@ -23,13 +23,13 @@ def http_get(url = def_url):
         s.connect(ip_port)
         request = bytes('GET /%s HTTP/1.0\r\nHost: %s\r\n\r\n' % (path, host), 'utf8')
         time_send = time.time()
-        print('send')
+        print('send request')
         s.send(request)
         dur_send = time.time() - time_send
         if dur_send:
             bps_send = len(request) / dur_send
 
-        print('recv')
+        print('recv response')
         time_recv = time.time()
         s.settimeout(60)
         while True:
