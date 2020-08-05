@@ -1,3 +1,5 @@
+# see also https://gitlab.com/rcolistete/micropython-samples/-/blob/master/Pycom/Using_Expansion_Board_en.md#10-battery-voltage-reading-via-voltage-divider-and-vbatt-pin
+
 import machine
     import statistics
 
