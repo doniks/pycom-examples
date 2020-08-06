@@ -19,6 +19,8 @@ try: from cp import cp
 except: pass
 try: from df import df
 except: pass
+try: from grep import grep
+except: pass
 try: from ls import *
 except: pass
 try: from mkdir import mkdir, rmdir
