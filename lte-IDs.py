@@ -52,11 +52,40 @@ except:
 print("imsi", imsi)
 
 
+
 print("#################################### decoding ids ....")
 
+print()
+print("IMEI (International Mobile Equipment Identity) - identifies the device")
+print("IMEI", imei, "TAC+Serial+Check len=", len(imei))
+#
+# IMEI (International Mobile Equipment Identity)
+# number of a mobile phone is a 15 digit number unique to a mobile handset.
+# The IMEI number is used by a GSM network to identify valid devices
+#
+# https://www.quora.com/What-is-the-difference-between-ICCID-IMSI-and-IMEI-numbers?share=1
+
+# The IMEI (15 decimal digits: 14 digits plus a check digit)
+# or IMEISV (16 decimal digits: 14 digits plus two software version digits)
+# includes information on
+# - the origin,
+# - model,
+# - and serial number of the device.
+# The model and origin comprise the initial 8-digit portion of the IMEI/SV, known as the Type Allocation Code (TAC).
+# The remainder of the IMEI is manufacturer-defined, with a Luhn check digit at the end.
+# As of 2004,
+# the format of the IMEI is AA-BBBBBB-CCCCCC-D
+# The IMEISV does not have the Luhn check digit but instead has two digits for the Software Version Number (SVN), making the format
+# AA-BBBBBB-CCCCCC-EE
+tac=imei[0:8]
+print("TAC (Type Allocation Code) ", tac[0:2], "-", tac[2:], sep='')
+print("Serial", imei[8:-1])
+print("Check", imei[-1])
+
+
+print()
+print("ICCID (Integrated Circuit Card Identifier) - identifies the SIM")
 print("ICCID", iccid, "IIN(MII+CC+II) + Indiv. Account + Check Digit")
-
-
 # ICCID (Integrated Circuit Card Identifier)
 # identifies each SIM internationally. A full ICCID is 19 or 20 characters.
 # ICCID can be thought of as the serial number of the SIM Card. It is also
@@ -114,6 +143,7 @@ print("II (Issue Identifier 1-4 digits, often equal to MNC)", rest[0:4])
 
 
 print()
+print("IMSI (International Mobile Subscriber Identity) - identifies the subscriber, stored on SIM")
 print("IMSI", imsi, "MCC+MNC+MSIN")
 # IMSI (International Mobile Subscriber Identity)
 # It is stored inside the SIM.  It consists of three part.
@@ -186,13 +216,3 @@ elif mnc_len == 2:
     print("2:{}".format(imsi[5:]))
 elif mnc_len == 3:
     print("3:{}".format(imsi[6:]))
-
-
-
-
-#
-# IMEI (International Mobile Equipment Identity)
-# number of a mobile phone is a 15 digit number unique to a mobile handset.
-# The IMEI number is used by a GSM network to identify valid devices
-#
-# https://www.quora.com/What-is-the-difference-between-ICCID-IMSI-and-IMEI-numbers?share=1
