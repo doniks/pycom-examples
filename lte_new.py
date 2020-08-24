@@ -3,6 +3,7 @@ import machine
 from network import LTE
 import socket
 import sys
+import os
 import binascii
 import pycom
 
@@ -33,14 +34,16 @@ try:
 except:
     lte = None
 
-def sleep(s):
-    if not s:
-        return
-    print("sleep", s)
+def sleep(s, verbose=False):
+    if verbose:
+        print("sleep(", s, ") ", end="")
     while s > 0:
+        if verbose:
+            print(s, end=" ")
         time.sleep(1)
         s -= 1
-    print("sleep done")
+    if verbose:
+        print("")
 
 def msg(*m):
     print(time.time(), m)
@@ -341,7 +344,7 @@ def lpm():
     try:
         l = at('AT!="cat /fs/sqn/etc/scripts/60-lpm-enable.cli"', do_return=True)
         if l == L:
-            print("lpm is on (60)")
+            print("lpm is configured (60)")
             return True
     except Exception as e:
         print("Exception while reading lpm 60")
@@ -350,15 +353,15 @@ def lpm():
     try:
         l = at('AT!="cat /fs/sqn/etc/scripts/61-lpm-enable.cli"', do_return=True)
         if l == L:
-            print("lpm is on (61)")
+            print("lpm is configured (61)")
             return True
     except Exception as e:
         print("Exception while reading lpm 61")
 
-    print("lpm is off")
+    print("lpm is not configured")
     return False
 
-def lpm_disable():
+def lpm_unconfigure():
     try:
         at('AT!="rm /fs/sqn/etc/scripts/60-lpm-enable.cli"')
     except Exception as e:
@@ -369,7 +372,7 @@ def lpm_disable():
         print("lpm rm 61", e)
     lpm()
 
-def lpm_enable():
+def lpm_configure():
     try:
         at('AT!="echo setlpm 1 0 0 1 > /fs/sqn/etc/scripts/60-lpm-enable.cli"')
         time.sleep(.1)
@@ -453,7 +456,7 @@ def provider():
         print(mnc2, "/", mnc3, "unknown")
     return apn
 
-def attach(apn=None, band=20, timeout_s = attach_timeout_s, do_fsm_log=True, do_rssi_log=True):
+def attach(apn=None, band=None, timeout_s = attach_timeout_s, do_fsm_log=True, do_rssi_log=True):
     if not lte:
         init()
     if lte.isattached():
@@ -662,7 +665,7 @@ def test_dl():
                 sleep(1)
                 connect()
     repetitions = 3
-    delays = [10, 60, 300, 600]
+    delays = [10, 60, 300 ] # , 600]
     for d in delays:
         for r in range(repetitions):
             success = False
@@ -677,7 +680,7 @@ def test_dl():
                     print("Exception during download:", e)
             if not success:
                 raise Exception("test_dl failed (delay after:", d, " repetition:", r, "attempt:", a, ")")
-            sleep(d)
+            sleep(d, verbose=True)
 
 def long_at():
     if not lte.isattached():
@@ -717,7 +720,6 @@ def long_at():
     # Shutdown socket
     lte.send_at_cmd('AT+SQNSH=1')
     sleep(1)
-
 
 def test_mode():
     t = pycom.nvs_get("test_mode")
