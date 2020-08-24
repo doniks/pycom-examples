@@ -783,12 +783,16 @@ def long_at():
     sleep(1)
 
 def test_mode():
-    t = pycom.nvs_get("test_mode")
-    if t:
-        print("test_mode on", t)
-        return True
-    else:
-        print("test_mode off", t)
+    try:
+        t = pycom.nvs_get("test_mode")
+        if t:
+            print("test_mode on", t)
+            return True
+        else:
+            print("test_mode off", t)
+            return False
+    except:
+        print("test_mode unset")
         return False
 
 def test_on():
