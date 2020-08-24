@@ -514,6 +514,57 @@ def attach(apn=None, band=None, timeout_s = attach_timeout_s, do_fsm_log=True, d
         measure("attached3")
         measure("attached4")
 
+def attach_manual(apn=None, band=None, timeout_s = attach_timeout_s, do_fsm_log=True, do_rssi_log=True):
+    if not lte:
+        lte_debug = True
+        init()
+    if lte.isattached():
+        print("already attached")
+    else:
+        if band is None:
+            band=20
+        t = time.ticks_ms()
+        at('AT')
+        at('AT+CGATT?')
+        at('AT+CEREG?')
+        at('AT+CFUN?')
+        at('AT+SQNCTM?')
+        # SMDD
+        at('AT!="showver"')
+        at('AT!="clearscanconfig"')
+        at('AT!="RRC::addScanBand band=' + str(band) + '"')
+        at('AT!=disablelog 1')
+        at('AT+CFUN=1')
+        at('AT!=setlpm airplane=1 enable=1')
+        # if apn:
+        #     if band:
+        #         lte.attach(apn=apn, band=band)
+        #     else:
+        #         lte.attach(apn=apn)
+        # else:
+        #     if band:
+        #         lte.attach(band=band)
+        #     else:
+        #         lte.attach()
+        print("attach took", (time.ticks_ms() - t ) / 1000 )
+        isattached(timeout_s, do_fsm_log=do_fsm_log, do_rssi_log=do_rssi_log)
+        print("attaching took", (time.ticks_ms() - t ) / 1000 )
+        at('AT+CEREG?')
+        at('AT+SQNMONI=7')
+        psm()
+        edrx()
+        ifconfig()
+        d = socket.dnsserver()
+        if d[0] == '0.0.0.0':
+            print("setting dns server 8.8.8.8")
+            socket.dnsserver(0, '8.8.8.8')
+        print("DNS:", socket.dnsserver())
+        # after attaching there's a longer period with higher consumption, so we measure it twice
+        measure("attached")
+        measure("attached2")
+        measure("attached3")
+        measure("attached4")
+
 def isattached(timeout_s = attach_timeout_s, do_fsm_log=True, do_rssi_log=True):
     if timeout_s is not None:
         timeout_ms = timeout_s * 1000
