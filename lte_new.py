@@ -263,15 +263,25 @@ def rssi(log=False):
     if lte is None:
         init()
     csq = at('AT+CSQ', do_return=True).strip()
-    rsrp = at('AT+VZWRSRP', do_return=True).strip()
-    rsrq = at('AT+VZWRSRQ', do_return=True).strip()
+    rsrp = ""
+    rsrq = ""
+    rsrp2 = ""
+    rsrq2 = ""
+    try:
+        rsrp = at('AT+VZWRSRP', do_return=True).strip()
+        rsrq = at('AT+VZWRSRQ', do_return=True).strip()
+    except:
+        pass
     a = lte.isattached()
     print(time.time(), a, csq, rsrp, rsrq)
     while log:
         a2 = lte.isattached()
         csq2 = at('AT+CSQ', do_return=True).strip()
-        rsrp2 = at('AT+VZWRSRP', do_return=True).strip()
-        rsrq2 = at('AT+VZWRSRQ', do_return=True).strip()
+        try:
+            rsrp2 = at('AT+VZWRSRP', do_return=True).strip()
+            rsrq2 = at('AT+VZWRSRQ', do_return=True).strip()
+        except:
+            pass
         if a != a2 or csq != csq2 or rsrp != rsrp2 or rsrq != rsrq2:
             a = a2
             csq = csq2
