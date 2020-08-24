@@ -53,7 +53,7 @@ print("imsi", imsi)
 
 
 
-print("#################################### decoding ids ....")
+print("\n#################################### decoding ids ....")
 
 print()
 print("IMEI (International Mobile Equipment Identity) - identifies the device")
@@ -143,7 +143,7 @@ print("II (Issue Identifier 1-4 digits, often equal to MNC)", rest[0:4])
 
 
 print()
-print("IMSI (International Mobile Subscriber Identity) - identifies the subscriber, stored on SIM")
+print("IMSI (International Mobile Subscriber Identity) - identifies the subscriber (stored on SIM)")
 print("IMSI", imsi, "MCC+MNC+MSIN")
 # IMSI (International Mobile Subscriber Identity)
 # It is stored inside the SIM.  It consists of three part.
