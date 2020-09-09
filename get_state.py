@@ -17,6 +17,21 @@ try:
     print("temperature", machine.temperature())
 except:
     pass
+mrc = machine.reset_cause()
+if mrc == 0:
+    print()
+mwr = machine.wake_reason()
+print("wake_reason", mwr, end=' ')
+if mwr[0] == machine.PWRON_WAKE:
+    print("PWRON_WAKE")
+    # reset button
+elif mwr[0] == machine.PIN_WAKE:
+    print("PIN_WAKE")
+elif mwr[0] == machine.RTC_WAKE:
+    print("RTC_WAKE")
+    # from deepsleep
+elif mwr[0] == machine.ULP_WAKE:
+    print("ULP_WAKE")
 # print("rng", machine.rng())
 
 print("===== os =========================================")
