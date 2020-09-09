@@ -33,11 +33,17 @@ try: from rm import rm
 except: pass
 
 # custom pycom dev board commands
+try: from sleep import sleep
+except: pass
 try: from blink import blink
 except: pass
 try: from sdcard import sd
 except: pass
+try: from uping import ping
+except: pass
 try: from dns import dns
+except: pass
+try: from http_get import *
 except: pass
 try: from whoami import whoami
 except: pass
