@@ -94,7 +94,9 @@ def init():
         else:
             lte=init_psm_off()
 
-def at(cmd='', quiet=True, do_return=False):
+def at(cmd='', quiet=True, do_return=False, raise_on_error=True):
+    if lte is None:
+        init()
     if cmd == '':
         cmd='AT'
         quiet=False
@@ -108,13 +110,23 @@ def at(cmd='', quiet=True, do_return=False):
             continue
         else:
             if do_return:
-                if line == 'ERROR':
+                if line == 'ERROR' and raise_on_error:
                     raise Exception('AT cmd "' + cmd + '" returned ERROR: "' + response + '"')
                 retval += line + '\n'
             else:
                 print(line)
     if do_return:
         return retval
+
+def at_log(cmd):
+    resp = ""
+    last_resp = ""
+    while True:
+        resp = at(cmd, do_return=True, raise_on_error=False).strip()
+        if resp != last_resp:
+            print(time.time(), resp)
+            last_resp = resp
+        sleep(1)
 
 def version(debug=False):
     if not lte:
@@ -259,6 +271,11 @@ def rssi_old():
     # 97 True  +CSQ: 21,99 +VZWRSRP: 1,6309,-90.10  +VZWRSRQ: 1,6309,-11.40
     pass
 
+def bands():
+    if lte is None:
+        init()
+    grep('vendor', at('AT+SMDD', do_return=True))
+
 def rssi(log=False):
     if lte is None:
         init()
@@ -288,6 +305,34 @@ def rssi(log=False):
             rsrp = rsrp2
             rsrq = rsrq2
             print(time.time(), a, csq, rsrp, rsrq)
+
+def rsrpq(log=False):
+    msg = ""
+    last_msg = ""
+    while log:
+        r = at('AT+CESQ', do_return=True).strip()
+        rr = r.split(' ')[1].split(',')
+        rsrq = int(rr[4])
+        rsrp = int(rr[5])
+        msg = 'RSRP=' + str(rsrp) + ':'
+        if rsrp == 0:
+            msg += ' <-140 dBm'
+        elif rsrp == 255:
+            msg += 'not known'
+        else:
+            dBm = -140 + rsrp
+            msg += ' <' + str(dBm) + 'dBm'
+        msg += ', RSRQ=' + str(rsrq) + ':'
+        if rsrq == 0:
+            msg += ' <-19.5dB'
+        elif rsrq == 255:
+            msg += 'not known'
+        else:
+            db = -19.5 + 0.5 * rsrq
+            msg += ' <' + str(db) + 'dB'
+        if msg != last_msg:
+            print(time.time(), msg)
+            last_msg = msg
 
 def showphy():
     at('AT!="showphy"')
@@ -472,6 +517,7 @@ def attach(apn=None, band=None, timeout_s = attach_timeout_s, do_fsm_log=True, d
     if lte.isattached():
         print("already attached")
     else:
+        lte.imei()
         version()
         lpm()
         try:
@@ -564,6 +610,13 @@ def attach_manual(apn=None, band=None, timeout_s = attach_timeout_s, do_fsm_log=
         measure("attached2")
         measure("attached3")
         measure("attached4")
+
+def isattached_manual():
+    cmds=['AT+CEREG?', 'AT+CGATT?', ]
+    for cmd in cmds:
+        print(at(cmd, do_return=True).strip(), end=', ')
+    rsrpq()
+    #print()
 
 def isattached(timeout_s = attach_timeout_s, do_fsm_log=True, do_rssi_log=True):
     if timeout_s is not None:
@@ -821,6 +874,13 @@ def test_run():
             print("Exception", e)
         print("deepsleep")
         machine.deepsleep(60000)
+
+def reset():
+    print('lte.reset')
+    lte.reset()
+    print('machine.reset')
+    sleep(1)
+    machine.reset()
 
 print(__name__)
 r = machine.reset_cause()

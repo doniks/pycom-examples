@@ -18,7 +18,8 @@ print("sqnsup_uart.py")
 
 ########### CONFIG
 # choose whether you want recovery update method, or normal update method
-use_recovery = False
+use_recovery = True
+use_updater = True
 # choose whether you want to use full image or diff image
 use_full = True
 # target version
@@ -28,7 +29,9 @@ ver = 'CATM1-41065'
 dbg = True
 # serial port
 serial_port = '/dev/ttyACM0'
+serial_port = '/dev/ttyACM1'
 serial_port = '/dev/ttyUSB2'
+#serial_port = '/dev/ttyUSB6'
 # where are the FW images stored
 dir='/home/peter/docs/FirmwareReleases/sequans'
 
@@ -39,6 +42,9 @@ diff = dv + "upgdiff_33080-to-41019.dup"
 updater = dv + "updater.elf"
 
 
+# list and let it raise an exception if it doesn't exist
+if use_recovery and use_updater:
+    print("updater", updater, os.stat(updater)[6]/1024, "KB")
 
 
 
@@ -61,16 +67,16 @@ try:
 
     if use_recovery:
         import sqnsupgrade
-        sqnsupgrade.uart(True, debug=dbg)
+        if use_updater:
+            sqnsupgrade.uart(True, updater, debug=dbg)
+        else:
+            sqnsupgrade.uart(True, debug=dbg)
     else:
         import sqnsupgrade
         sqnsupgrade.uart(debug=dbg)
 except:
     print("sqnsup_uart.py is running on desktop")
 
-    # list and let it raise an exception if it doesn't exist
-    if use_recovery:
-        print("updater", updater, os.stat(updater)[6]/1024, "KB")
     if use_full:
         print("full", full, os.stat(full)[6]/1024, "KB")
     else:
@@ -79,14 +85,18 @@ except:
     x = time.time()
     if use_full:
         if use_recovery:
-            print("full, recovery", serial_port, full, updater)
-            sqnsupgrade.run(serial_port, full, updater, debug=dbg)
+            if use_updater:
+                print("full, recovery", serial_port, full, updater)
+                sqnsupgrade.run(serial_port, full, updater, debug=dbg)
+            else:
+                print("full, recovery", serial_port, full)
+                sqnsupgrade.run(serial_port, full, debug=dbg)
         else:
             print("full, normal", serial_port, full)
             sqnsupgrade.run(serial_port, full, debug=dbg)
     else:
         if use_recovery:
-            print("diff update with recovery is NOT SUPPORTED (I think :-P)")
+            print("diff update with recovery is NOT SUPPORTED (I think :-P) .... actually I think it should be!")
         else:
             print("diff, normal", serial_port, diff)
             sqnsupgrade.run(serial_port, diff, debug=dbg)

@@ -180,3 +180,6 @@ at('AT+GSN')
 
 at('AT+CGPADDR')
 # '\r\n+CGPADDR: 1,"10.0.1.197"\r\n\r\nOK\r\n'
+
+
+SQNWL
