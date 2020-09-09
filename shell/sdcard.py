@@ -13,8 +13,14 @@ def sd():
         else:
             print("Exception while trying to mount:", e)
 
+    # cd
+    os.chdir('/sd')
+
     # check the content
-    print('/sd :', os.listdir('/sd'))
+    #print('/sd :', os.listdir('/sd'))
+    print('/sd :', os.listdir())
+
+
 
     # # try some standard file operations
     # f = open('/sd/test.txt', 'w')
