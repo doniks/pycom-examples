@@ -7,6 +7,7 @@ led_on = 0
 led(led_off)
 
 button = Pin('G17', mode=Pin.IN, pull=Pin.PULL_UP)
+# works on GPy
 while True:
     if button():
         # print("not pressed")
