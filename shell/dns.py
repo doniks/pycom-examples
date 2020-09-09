@@ -14,10 +14,19 @@ def dns(host='pycom.io', attempts=1):
             print(time.time(), "dns[{}] failure:".format(attempt), host, e)
             time.sleep(2)
     if not connected:
-        raise Exception(time.time(), "no connection")
+        raise Exception(time.time(), "dns lookup failed")
+
+
+def dns_test():
+    for name in range(ord('a'), ord('n')):
+        t = time.ticks_ms()
+        h = chr(name)+'.root-servers.net'
+        dns(h, attempts=3)
+        print('h', h, 'seconds:', (time.ticks_ms() - t) / 1000 )
 
 if __name__ == "__main__":
     import binascii
     import machine
     print(os.uname().sysname, binascii.hexlify(machine.unique_id()), "dns.py")
-    dns('www.pycom.io')
+    # dns('www.pycom.io')
+    dns_test()
