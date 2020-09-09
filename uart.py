@@ -14,10 +14,12 @@ import pycom
 import time
 from machine import UART
 import machine
+import binascii
 
-r = str(machine.rng())
+m = hex(machine.rng())
 
-# reinitializing uart0 in this way, breaks the REPL in pymakr
+# uart 0, repl
+# reinitializing uart0 in the following way, breaks the REPL in pymakr
 # however you can connect, e.g., with minicom -b 9600
 # it will receive stdout, e.g. print() AND uart0.write()
 # uart0 = UART(0, baudrate=9600)
@@ -25,22 +27,48 @@ r = str(machine.rng())
 # uart0.write(r)
 # uart0.write(")\n\r")
 
-print("uart1 init")
-# uart1 = UART(1, baudrate=9600, timeout_chars=10)
-uart1 = UART(1, baudrate=9600, pins=('P23', 'P22'))
-uart1.write("Hello UART 1 (")
-uart1.write(r)
-uart1.write(")\n\r")
-print("uart1 init done")
+# print("uart1")
+# # uart1 = UART(1, baudrate=9600, timeout_chars=10)
+# # pins=(TXD, RXD, RTS, CTS)
+# uart1 = UART(1, baudrate=9600 ) # pins=('P23', 'P22'))
+# uart1.write("Hello UART 1 (")
+# uart1.write(m)
+# uart1.write(")\n\r")
+# print("uart1 done")
 
-print("uart2 init")
+print("uart2")
 # On the GPy/FiPy UART2 is unavailable because it is used to communicate with the cellular radio.
-# pins=(TXD, RXD, RTS, CTS)
-uart2 = UART(2, baudrate=9600, pins=('P8', 'P9'))
-uart2.write("Hello UART 2 (")
-uart2.write(r)
-uart2.write(")\n\r")
-print("uart2 init done")
+uart2 = UART(2, baudrate=9600, pins=('P8', 'P9', 'P10', 'P11'), timeout_chars=10)
+# uart2 = UART(2, baudrate=9600, pins=('P8', 'P9'), timeout_chars=10)
+print("uart2 tx")
+uart2.write("Hello UART 2")
+uart2.write(m)
+uart2.write('\n\r')
+t = time.ticks_ms()
+i = 0
+while (time.ticks_ms() - t ) / 1000 < 5:
+    m = i.to_
+    uart2.write(m)
+    uart2.write("\n\r")
+    print(".")
+    time.sleep(0.2)
+print("uart2 tx done")
+sleep(5)
+print("uart2 rx")
+for x in range(5):
+    r = uart2.readline()
+    if r is None:
+        print(".")
+    else:
+        print("recv(", len(r), "):[", binascii.hexlify(r), "]", sep='', end='->')
+        try:
+            print(r.decode('utf-8'))
+        except:
+            pass
+        print()
+    time.sleep(1)
+#print("recv:", str(r))
+print("uart2 done")
 
 
 #
