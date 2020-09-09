@@ -1,5 +1,18 @@
 import os
 
+# COMMANDS: ls() ll() find() du()
+#
+# EXAMPLES:
+# ls('/flash/lib')
+# ls() # lists the current working directory, see pwd()
+# ll('/sd')
+
+# TODO:
+# implement wildcards
+# move cd() pwd() df() here
+# probably rm() cat() mv() as well? they all kinda belong together and they all should support wildcards
+# fix/implement find(/flash/foo*/bar.*', do_return=True) and cat(find('thingy.txt', do_return=True)) mv(find('*.py'), '/flash/backup/')
+
 # add a trailing /
 def _add_slash(dir):
     if dir[-1] == '/':
@@ -23,7 +36,6 @@ def _is_dir(obj):
         return True
     except:
         return False
-
 
 def _ll(d):
     try:
@@ -75,7 +87,6 @@ def _wildcard(path):
         dir = os.getcwd()
         objects.pop()
     print(dir, objects)
-
 
 def _find(obj, name=None, type=None, do_return=False):
     import re
@@ -132,12 +143,10 @@ def ls(x=''):
         except Exception as e:
             print(x, ":", e)
 
-
 def ll(dir=''):
     if dir == '':
         dir = os.getcwd()
     _ll(dir)
-
 
 def find(dir='', name=None, type=None, do_return=False):
     if dir == '':
@@ -162,8 +171,6 @@ def find(dir='', name=None, type=None, do_return=False):
         return _find(dir, name, type, do_return)
     else:
         _find(dir, name, type, do_return)
-
-
 
 def du(dir='', do_return=False):
     if dir == '':
@@ -200,9 +207,6 @@ def _du(dir):
     except:
         return os.stat(dir)[6]
 
-
-
-
 if __name__ == "__main__":
     ls()
     # print(find('/', name='sy', do_return=True))
@@ -219,3 +223,4 @@ if __name__ == "__main__":
     # print(find(name='.*33080.*', type='f', do_return=True))
     #print(find(name='.*NB1.*', type='d', do_return=True))
     # print(find(name='.*41065.*', type=None, do_return=True))
+    pass
