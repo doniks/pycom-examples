@@ -39,9 +39,17 @@ def http_get(url=None, kb=None, verbose=False, timeout_s=5, do_print=False):
     success = False
     try:
         # print("http_get(", url, ")")
-        _, _, host, path = url.split('/', 3)
+        url_split = url.split('/')
+        host = url_split[2]
+        path = '/'
+        if len(url_split) == 4:
+            path = url_split[3]
+        port = 80
+        if ':' in host:
+            host, port = host.split(':')
+            port = int(port)
         # print('getaddrinfo')
-        ip_port = socket.getaddrinfo(host, 80)[0][-1]
+        ip_port = socket.getaddrinfo(host, port)[0][-1]
         # print('socket')
         s = socket.socket()
         # print('connect')
@@ -57,25 +65,29 @@ def http_get(url=None, kb=None, verbose=False, timeout_s=5, do_print=False):
         # print('recv response')
         time_recv_ms = time.ticks_ms()
         s.settimeout(timeout_s) # 10)
+        buf = b''
         while True:
             data = s.recv(100)
             if data:
                 cnt_recv += 1
                 len_recv += len(data)
                 dur_recv_ms = time.ticks_ms() - time_recv_ms
+                buf += data
                 if dur_recv_ms:
                     dur_recv_s = dur_recv_ms / 1000
                     bps_recv = len_recv / dur_recv_s
                     if verbose or dur_recv_s % 5 == 0:
                         print("received[", time.time(), "]: len=", len_recv, "bps=", bps_recv)
-                    if do_print:
-                        print(str(data, 'utf8'), end='')
+                    # if do_print:
+                    #     print(str(data, 'utf8'), end='')
 
                 success = True
                 pass
             else:
                 break
         # print("recv: done")
+        if do_print:
+            print('#########################', str(buf, 'utf8'), '#########################', sep='\n')
         # print("close")
         s.close()
     except Exception as e:
@@ -89,7 +101,7 @@ def http_get(url=None, kb=None, verbose=False, timeout_s=5, do_print=False):
     else:
         print("http_get failed:", end="")
     print(len_recv, "bytes received in", dur_recv_s, "s ->", bps_recv, "bps")
-    return (success, dur_send_ms/ 1000, dur_recv_ms/1000, dur_total_s, len_recv, bps_send, bps_recv)
+    return (success, dur_send_s, dur_recv_s, dur_total_s, len_recv, bps_send, bps_recv)
 
 
 # def http_gets(url = def_url, count=1):
@@ -102,12 +114,24 @@ def http_get(url=None, kb=None, verbose=False, timeout_s=5, do_print=False):
 #             print("failure[", c, "]:", e)
 
 def http_gets(url = def_url, count=1):
+    stat = [True, 0, 0, 0, 0, 0, 0]
+    count_success = 0
     for c in range(0, count):
-        print(c, http_get(url))
+        s = http_get(url)
+        if s[0]:
+            count_success+=1
+            for x in range(1,len(stat)):
+                stat[x] += s[x]
+        time.sleep(1)
+    print('success:', count_success, 'out of', count)
+    if count_success:
+        print('stat', stat)
+        avg = [x / count_success for x in stat]
+        print('avg  ', avg[1:])
 
 if __name__ == "__main__":
     # http_get()
-    http_get(kb=0)
+    # http_get(kb=0)
     # http_get('http://micropython.org/ks/test.html')
     # http_gets('http://detectportal.firefox.com/')
     # http_gets('http://192.168.178.1/', 1) # router login page
@@ -122,3 +146,6 @@ if __name__ == "__main__":
     # laptop when directly connected to the PyEthernet
     # http_gets("http://192.168.0.1/pycom-fwtool-1.16.1-bionic-amd64.deb")
     # http_gets("http://192.168.0.1/test.bin")
+    # http_get("http://192.168.0.1:8000", verbose=True, do_print=True)
+    #http_get("http://192.168.0.1:8000/10B.img", verbose=True, do_print=True)
+    http_gets("http://192.168.0.1:8000/10B.img", 100)
