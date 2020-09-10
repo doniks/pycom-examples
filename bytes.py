@@ -2,8 +2,15 @@ import ubinascii
 import machine
 import os
 
-def int_to_bytes(i, len):
-    return i.to_bytes(len, "big")
+def int_to_bytes(i, lenght=None):
+    if lenght is None:
+        import math
+        h = hex(i)
+        l = len(h)
+        lenght = (l - 2) # subtract the length of 0x
+        lenght = math.ceil(lenght/2) # divice by two to get number of bytes and ceil to correct for missing leading zero, e.g. i=1 -> 0x1 instead of 0x01
+        print(h, l, lenght)
+    return i.to_bytes(lenght, "big")
 
 def bytes_to_int(b):
     return int.from_bytes(b, "big")
