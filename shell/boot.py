@@ -39,7 +39,7 @@ try: from blink import blink
 except: pass
 try: from sdcard import sd
 except: pass
-try: from uping import ping
+try: from ping import ping
 except: pass
 try: from dns import dns
 except: pass
