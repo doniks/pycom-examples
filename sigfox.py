@@ -2,6 +2,7 @@ from network import Sigfox
 import socket
 import machine
 import binascii
+from binascii import hexlify
 import pycom
 import time
 import os
@@ -14,17 +15,29 @@ print(name, "sigfox.py")
 # if you haven't set up your device follow these steps:
 # * go here https://backend.sigfox.com/activate
 # * login
-#   (country will be autoselected when you are logged in)
-# * paste device ID and PAC (see below)
-# -> if it is ok it will say "DevKit available for activation"
-# -> if it fails with "We could not find a DevKit matching your ID/PAC", then I think someone has already registered this device, it might be you! so double check with link below
-# * click blabla continue ...
-# -> if it is successful ... Congratulations ! Your device .. has been successfully registered on Sigfox Cloud. To finalize its activation your device must send a first frame. After this first message, your device will be able to send a maximum of 140 messages per day during 1 year
+#   (country will be autoselected once you are logged in)
+# * get device ID and PAC (see below) and add them on the website
+# -> if it fails with "We could not find a DevKit matching your ID/PAC"
+#    This (usually? always?) means someone has already registered this device
+#    It might be you! So double check with link below
+# -> if it is ok it will say "Pycom Go Invent DevKit available for activation"
+# * select a purpose, fill in a description and click on next
+# -> if it is successful it will say
+#    Congratulations ! Your device .. has been successfully registered on Sigfox Cloud.
+#    To finalize its activation your device must send a first frame. After this first message, your device will be able to send a maximum of 140 messages per day during 1 year
 # * go to https://backend.sigfox.com/device/list
-# * find the device based on Id
-# * click on the Name of the device
-# * Edit and change it to something useful, like fipy-4HEX as printed above
-# ( background: https://docs.pycom.io/gettingstarted/registration/sigfox )
+# * find the device based on the ID
+# * left click on the Name of the device
+# * Edit
+# * Change the name to something useful, like fipy-4HEX as printed above
+# * configure downlink:
+#   * go to Device - List
+#   * click on Device type
+#   * Edit
+#   * Change the name to something useful, like "fipy-beef direct DL"
+#   * Downlink mode: DIRECT
+#   * Downlink data in hex: {time}0000{rssi}
+# ( see also: https://docs.pycom.io/gettingstarted/registration/sigfox )
 
 # EVERY TIME:
 # * go here https://backend.sigfox.com/device/list
@@ -40,7 +53,8 @@ print(name, "sigfox.py")
 # init
 
 downlink = True
-count = 10
+# downlink = False
+count = 100
 sigfox = Sigfox(mode=Sigfox.SIGFOX, rcz=Sigfox.RCZ1)
 print("ID", binascii.hexlify(sigfox.id()))
 print("PAC", binascii.hexlify(sigfox.pac()))
@@ -74,6 +88,7 @@ ct_recv = 0
 ct_fail = 0
 
 for ct in range(count):
+    pycom.rgbled(0x111100)
     c = (ct % 256).to_bytes(1, "big")
     key = "sfx_ct"
     gct = 0
@@ -93,9 +108,19 @@ for ct in range(count):
             m = i + bytes([0x02]) + c + g + r
             print("send", binascii.hexlify(m), "and wait for reception")
             s.send(m)
+            pycom.rgbled(0x000011)
             ct_send += 1
+            print("receive ...")
             x = s.recv(64)
-            print("received", binascii.hexlify(x))
+            pycom.rgbled(0x001100)
+            # {time}0000{rssi} 4,2,2 bytes
+            t = x[0:4]
+            z = x[4:6]
+            rssi = x[6:8]
+            # b'5f59ebe4' b'0000' b'ff75'
+            # b'5f59ec42' b'0000' b'ff72'
+            # TODO: how to convert
+            print("received=", hexlify(x), " time=", hexlify(t), " zero=", hexlify(z), " rssi=", hexlify(rssi), sep='')
             print("rssi", sigfox.rssi())
             ct_recv += 1
         else:
@@ -103,10 +128,15 @@ for ct in range(count):
             m = i + bytes([0x01]) + g + r
             print("send", binascii.hexlify(m))
             s.send(m)
+            pycom.rgbled(0x000011)
             ct_send += 1
     except Exception as e:
+        pycom.rgbled(0x110000)
         print("failed", e)
         ct_fail += 1
+    time.sleep(2)
+    print("ct=", ct, "(send,recv,fail)=", ct_send, ct_recv, ct_fail)
+
 
 
 print("done (send,recv,fail)=", ct_send, ct_recv, ct_fail)
