@@ -2,10 +2,11 @@ import pycom
 import machine
 
 if pycom.pybytes_on_boot():
-    print("Pybytes is turned on ... turning it off")
+    print("Pybytes is currently turned on ... turning it off now")
     pycom.pybytes_on_boot(False)
 else:
-    print("Pybytes is turned off ... turning it on")
+    print("Pybytes is currently turned off ... turning it on now")
     pycom.pybytes_on_boot(True)
 
-# machine.reset()
+if False:
+    machine.reset()
