@@ -113,6 +113,18 @@ def ping(host, count=4, timeout=5000, interval=1000, quiet=False, size=64):
     not quiet and print("%u packets transmitted, %u packets received, %.2f%% packet loss, %.2f ms avg" % ret)
     return ret
 
+def pings(host, repetitions=None, count=10):
+    print('pings', host)
+    ct = 0
+    while True:
+        s = ping(host, quiet=True)
+        print(ct, time.time(), 'sent:', s[0], 'recv:', s[1], 'loss:', s[2], 'avg:', s[3])
+        time.sleep(1)
+        ct += 1
+        if repetitions and cd >= repetitions:
+            break
+
 if __name__ == "__main__":
     # ping('192.168.0.1')
-    ping('8.8.8.8', count=10)
+    # ping('8.8.8.8', count=10)
+    pings('8.8.8.8')
