@@ -19,7 +19,7 @@ except: pass
 try: from ntp import *
 except: pass
 
-print(os.uname().sysname.lower() + '-' + binascii.hexlify(machine.unique_id()).decode("utf-8")[-4:], "main.py")
+print(os.uname().sysname.lower() + '-' + binascii.hexlify(machine.unique_id()).decode("utf-8")[-4:], "lte.py")
 
 use_edrx = False
 use_psm = False
@@ -139,8 +139,10 @@ def version(debug=False):
         # UE5.2.0.3
         at('ATI1', quiet=True)
 
-def mod():
+def smod():
     at('AT+SMOD?')
+
+def bmod():
     at('AT+BMOD?')
 
 def fsm(write_file=False, do_return=False):
@@ -649,12 +651,12 @@ def isattached(timeout_s = attach_timeout_s, do_fsm_log=True, do_rssi_log=True):
         print("isattached", lte.isattached(), "turned true after {} s".format(( time.ticks_ms()-t )  / 1000 ))
         rssi()
 
-def ping(num=1, interval=0, do_fsm=False, quiet=False):
+def sqn_ping(num=1, interval=0, do_fsm=False, quiet=False):
     init()
     if not lte.isattached():
         attach()
-    if lte.isconnected():
-        lte.pppsuspend()
+    # if lte.isconnected():
+    #     lte.pppsuspend()
     ct = 0
     ct_succ = 0
     ct_fail = 0
@@ -835,46 +837,6 @@ def long_at():
     lte.send_at_cmd('AT+SQNSH=1')
     sleep(1)
 
-def test_mode():
-    try:
-        t = pycom.nvs_get("test_mode")
-        if t:
-            print("test_mode on", t)
-            return True
-        else:
-            print("test_mode off", t)
-            return False
-    except:
-        print("test_mode unset")
-        return False
-
-def test_on():
-    pycom.nvs_set("test_mode", 1)
-    test_mode()
-
-def test_off():
-    pycom.nvs_set("test_mode", 0)
-    test_mode()
-
-def test_run():
-    if test_mode():
-        try:
-            attach()
-            try:
-                ping(10)
-            except Exception as e:
-                print("Exception during ping", e)
-            connect()
-            test_dl()
-            try:
-                lte.deinit()
-            except Exception as e:
-                print("Exception during deinit", e)
-        except Exception as e:
-            print("Exception", e)
-        print("deepsleep")
-        machine.deepsleep(60000)
-
 def reset():
     print('lte.reset')
     lte.reset()
@@ -882,140 +844,8 @@ def reset():
     sleep(1)
     machine.reset()
 
-print(__name__)
-r = machine.reset_cause()
-if r == machine.PWRON_RESET:
-    print("PWRON_RESET")
-    # plug in
-    # press reset button on module
-    # reset button on JTAG board
-    # core dump
-    test_run()
-elif r == machine.HARD_RESET:
-    print("HARD_RESET")
-elif r == machine.WDT_RESET:
-    print("WDT_RESET")
-    # machine.reset()
-    # machine.lte_reset()
-elif r == machine.DEEPSLEEP_RESET:
-    print("DEEPSLEEP_RESET")
-    # machine.deepsleep()
-    test_run()
-elif r == machine.SOFT_RESET:
-    print("SOFT_RESET")
-    # Ctrl-D
-elif r == machine.BROWN_OUT_RESET:
-    print("BROWN_OUT_RESET")
-# try:
-#     # sqnsupgrade.info(True)
-#     msg("start")
-#     raise Exception("stop")
-#     measure("booted")
-#
-#     msg("instantiate")
-#     lte = init()
-#     # lte = LTE() # debug=True)
-#     measure("instantiated")
-#
-#     attach()
-#
-#     connect()
-#
-#     if False:
-#         ntp_sync()
-#         test_dl()
-#         raise Exception("stop")
-#     elif False:
-#         msg("download", "start")
-#         _dl()
-#         msg("download", "end")
-#         measure("downloaded")
-#     else:
-#         msg("ping", "start")
-#         ping()
-#         msg("ping", "end")
-#         measure("pinged")
-#         measure("pinged2")
-#         measure("pinged3")
-#         measure("pinged4")
-#
-#
-#     if use_psm:
-#         msg("deinit detach=False")
-#         lte.deinit(detach=False)
-#     else:
-#         msg("deinit")
-#         lte.deinit()
-#     measure("deinited")
-#     measure("deinited2")
-#
-#     ds = 10 # 10s - you probably want more if you want to replug the current shunts
-#     msg("deepsleep", ds)
-#     machine.deepsleep(ds * 1000)
-# except Exception as e:
-#     # sleep(1)
-#     # try:
-#     #     msg("deinit")
-#     #     lte.deinit()
-#     #     msg("deinit done")
-#     # except:
-#     #     msg("deinit failed")
-#     # # print("reset")
-#     # # machine.reset()
-#     msg("Exception", e)
-#
-# if False:
-#
-#     lte.init(psm_period_value=1, psm_period_unit=LTE.PSM_PERIOD_1H,
-#           psm_active_value=5, psm_active_unit=LTE.PSM_ACTIVE_2S)
-#
-#
-#     at('AT+CEREG=5')
-#     at('AT+CEREG?')
-#     # +CEREG: 2,1,"0001","01A2D001",7  -> attached
-#     # CREG: <n>,<stat>[,[<lac>],[<ci>],[<AcT>][,<cause_type>,<reject_cause>]]
-#     # CREG result codes ... I think CEREG is same ..
-#     # 0 not registered, MT is not currently searching a new operator to register to
-#     # 1 registered, home network
-#     # 2 not registered, but MT is currently searching a new operator to register to
-#     # 3 registration denied
-#     # 4 unknown (e.g. out of GERAN/UTRAN/E-UTRAN coverage)
-#     # 5 registered, roaming
-#     # 6 registered for "SMS only", home network (applicable only when indicates E-UTRAN)
-#     # 7 registered for "SMS only", roaming (applicable only when indicates E-UTRAN)
-#     # 8 attached for emergency bearer services only (see NOTE 2) (not applicable)
-#     # 9 registered for "CSFB not preferred", home network (applicable only when indicates E-UTRAN)
-#     # 10 registered for "CSFB not preferred", roaming (applicable only when indicates E-UTRAN)
-#
-#     at('AT+CGATT?') # is it attached? -> 0 = no, 1 = yes
-#     print(lte.isattached())
-#
-#     at('AT+CGATT=1') # attach
-#
-#     at('AT+CGATT=0') # detach
-#
-#     print("edrx get")
-#     at('AT+SQNEDRX?')
-#     # 0,4,"1101","0000" ->
-#     # 2,4,"0101","0000"
-#     at('AT+CEDRXS?') # setting
-#     # mode,ActType,ReqVal
-#     # Act,ReqVal
-#     # mode: 0 disable, 1 enable, 2 en+unsolicitedResC, 3 disable+discard
-#     # ActType: 4 = E-UTRAN (WB-S1 mode)
-#     # ReqVal:
-#     # 1101 2621,44s
-#     # +CEDRXS: 4,"1101"
-#     at('AT+CEDRXRDP?') # read dynamic parameters
-#     # AcT-type>[,<Requested_eDRX_value>[,<NW-provided_eDRX_value>[,<Paging_time_window>
-#     # ERROR
-#     at('AT+CEDRXP?')
-#     # ERROR
-#     print("edrx set OFF")
-#     at('AT+SQNEDRX=3')
-#     print("edrx set ON")
-#     # at('AT+SQNEDRX=2,,"1111"') # "0010"')
-#     # ERROR
-#     at('AT+SQNEDRX=2,4,"0101","0000"') # "0010"')
-#
-#
+if __name__ == "__main__":
+    attach(band=20)
+    sqn_ping(10)
+    connect()
+    dl()
