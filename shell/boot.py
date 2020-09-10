@@ -49,7 +49,11 @@ try: from whoami import whoami
 except: pass
 try: from hexdump import hexdump
 except:pass
-try: from ntp import *
+try: import ntp
+except:pass
+try: import wlan
+except:pass
+try: import eth
 except:pass
 
 print("boot.py:done")

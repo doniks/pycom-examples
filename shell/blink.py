@@ -37,8 +37,8 @@ if __name__ == "__main__":
     import os
     import binascii
     import machine
-    # blink()
-    blink(repetitions=0, on_ms=1500, off_ms=500)
+    blink()
+    # blink(repetitions=0, on_ms=1500, off_ms=500)
     # 0xffff00 # yellow
     # blink(3, 0x333300, 500, 100)
     #blink(10, 0x330033, 500)

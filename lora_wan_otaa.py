@@ -10,11 +10,15 @@ uid = binascii.hexlify(machine.unique_id())
 id = int(uid,16)
 print(os.uname().sysname, uid, id, "lora_wan_otaa.py")
 
-# 1. get the device eui (below)
-# 2. register device on TTN website https://console.thethingsnetwork.org with this device eui
-# 3. create a config block below
-# 4. fill with app_eui and app_key from TTN
-# 5. run this script and check on TTN website that the device shows up
+# 1. get the device eui and name (below)
+# 2. register device on TTN website https://console.thethingsnetwork.org with this
+#    * device eui and
+#    * use name for Device ID
+# 3. create a config block below using
+#    * name
+#    * application EUI
+#    * App Key
+# 4. run this script and check on TTN website that the device shows up
 
 
 
@@ -64,13 +68,13 @@ s = socket.socket(socket.AF_LORA, socket.SOCK_RAW)
 s.setsockopt(socket.SOL_LORA, socket.SO_DR, 5)
 
 
-
-m = 0
-while m < 1:
+packets_to_send = 3
+n = 0
+while n < packets_to_send:
     # make the socket blocking
     # (waits for the data to be sent and for the 2 receive windows to expire)
     s.setblocking(True)
-    b = bytes([0xaa, 0xaa, m % 256])
+    b = bytes([0xaa, 0xaa, n % 256])
     print("sending:", binascii.hexlify(b))
     # send some data
     s.send(b)
@@ -83,4 +87,4 @@ while m < 1:
         print("received:", binascii.hexlify(data))
 
     time.sleep(5)
-    m += 1
+    n += 1

@@ -107,6 +107,15 @@ def connect():
 def ip():
     return w.ifconfig()[0]
 
+def gw():
+    return w.ifconfig()[2]
+
+def ifconfig():
+    init()
+    c = e.ifconfig()# (ip, subnet_mask, gateway, DNS_server)
+    print("ifconfig", c)
+    return c
+
 def wlan_deinit():
     w.deinit()
 

@@ -208,7 +208,8 @@ def _du(dir):
         return os.stat(dir)[6]
 
 if __name__ == "__main__":
-    ls()
+    # ls()
+    find()
     # print(find('/', name='sy', do_return=True))
     # du('/flash')
     # ll('/sd')
