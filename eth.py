@@ -28,7 +28,7 @@ def reconnect(ip_mask_gw_dns=None):
         e.init()
     return connect(ip_mask_gw_dns)
 
-def connect(config=None):
+def connect(config=None, timeout_s=5):
     init()
     if e.isconnected():
         print('already connected')
@@ -48,13 +48,14 @@ def connect(config=None):
         e.ifconfig(config=config)
     print("connecting eth ...")
     i = 0
-    for i in range(0,50):
+    for i in range(0,timeout_s * 10):
         if e.isconnected():
             print("... eth connected")
             break
         else:
-            print(i, "waiting for connection", e.ifconfig()) #, end=" ")
-            time.sleep(0.5)
+            if i % 10 == 0:
+                print("waiting for connection", int(i/10)) # e.ifconfig()) #, end=" ")
+            time.sleep(0.1)
         i+=1
 
     if e.isconnected():
@@ -66,9 +67,17 @@ def connect(config=None):
         print("FAILED to connect eth")
         return False
 
+def ip():
+    return w.ifconfig()[0]
+
+def gw():
+    return w.ifconfig()[2]
+
 def ifconfig():
     init()
-    print("ifconfig", e.ifconfig()) # (ip, subnet_mask, gateway, DNS_server)
+    c = e.ifconfig()# (ip, subnet_mask, gateway, DNS_server)
+    print("ifconfig", c)
+    return c
 
 def disconnect():
     if e:
