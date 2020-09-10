@@ -19,7 +19,7 @@ def _checksum(data):
     cs = ~cs & 0xffff
     return cs
 
-def ping(host, count=4, timeout=5000, interval=10, quiet=False, size=64):
+def ping(host, count=4, timeout=5000, interval=1000, quiet=False, size=64):
     import utime
     import uselect
     import uctypes
@@ -46,7 +46,7 @@ def ping(host, count=4, timeout=5000, interval=10, quiet=False, size=64):
     h.seq = 1
 
     # init socket
-    sock = usocket.socket(usocket.AF_INET, usocket.SOCK_RAW, 1)
+    sock = usocket.socket(usocket.AF_INET, 3, 1) # usocket.SOCK_RAW, 1)
     sock.setblocking(0)
     sock.settimeout(timeout/1000)
     addr = usocket.getaddrinfo(host, 1)[0][-1][0] # ip address
@@ -87,7 +87,7 @@ def ping(host, count=4, timeout=5000, interval=10, quiet=False, size=64):
                     t_elasped = (utime.ticks_us()-h2.timestamp) / 1000
                     ttl = ustruct.unpack('!B', resp_mv[8:9])[0] # time-to-live
                     n_recv += 1
-                    not quiet and print("%u bytes from %s: icmp_seq=%u, ttl=%u, time=%f ms" % (len(resp), addr, seq, ttl, t_elasped))
+                    not quiet and print("%u bytes from %s: icmp_seq=%u, ttl=%u, time=%.2f ms" % (len(resp), addr, seq, ttl, t_elasped))
                     time_s += t_elasped
                     seqs.remove(seq)
                     if len(seqs) == 0:
@@ -102,16 +102,17 @@ def ping(host, count=4, timeout=5000, interval=10, quiet=False, size=64):
         utime.sleep_ms(1)
         t += 1
 
-    # close
     sock.close()
+    loss = (n_trans - n_recv) / n_trans * 100
     avg_s = 0;
     try:
         avg_s = time_s / n_recv
     except:
         pass
-    ret = (n_trans, n_recv, avg_s)
-    not quiet and print("%u packets transmitted, %u packets received, %.2f avg time" % ret)
+    ret = (n_trans, n_recv, loss, avg_s)
+    not quiet and print("%u packets transmitted, %u packets received, %.2f%% packet loss, %.2f ms avg" % ret)
     return ret
 
 if __name__ == "__main__":
-    ping('192.168.0.1')
+    # ping('192.168.0.1')
+    ping('8.8.8.8', count=10)
