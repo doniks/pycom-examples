@@ -39,8 +39,6 @@ try: from blink import blink
 except: pass
 try: from sdcard import sd
 except: pass
-try: from ping import ping
-except: pass
 try: from dns import dns
 except: pass
 try: from http_get import *
