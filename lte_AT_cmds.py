@@ -160,10 +160,12 @@ at("AT+CEREG?")
 # ci="0010581F" ... four byte E-UTRAN cell ID in hexadecimal format
 # AcT=9 ... 9 undefined ???
 
-at('AT+COPN') # print Operator Names
+at('AT+COPN') # list of Operator Names
 at('AT+COPS?')
 at('AT+COPL?')
 at('AT+CPLS?')
+AT+SQNHPLMN? # home plmn
+# +SQNHPLMN: "00101","Amarisoft","Amarisoft Network"
 
 
 at('AT!="fsm"')

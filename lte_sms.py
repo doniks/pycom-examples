@@ -4,6 +4,10 @@ import socket
 import machine
 import pycom
 
+# todo: 
+# send/recv sms
+# wakup from psm deepsleep via sms, nb: some networks might not queue&deliver, e.g., ATT
+
 def at(cmd):
     response = lte.send_at_cmd(cmd).split('\r\n')
     for line in response:
