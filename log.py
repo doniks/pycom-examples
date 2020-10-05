@@ -14,12 +14,12 @@ def log(m):
     f.close()
     print(t, m, sep="")
 
-def cat():
+def catlog():
     f = open(logfile, 'r')
     print(f.read())
     f.close()
 
-def rm():
+def rmlog():
     try:
         print("remove", logfile )
         os.remove(logfile)
@@ -27,3 +27,10 @@ def rm():
     except Exception as e:
         print("couldn't remove {}: {}".format(logfile,e))
         pass
+
+if __name__ == "__main__":
+    # log('eh yo whazzzup!?')
+    # print('---')
+    # catlog()
+    # if False: 
+    rmlog()

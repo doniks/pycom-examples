@@ -10,6 +10,7 @@ def print_wifi_mode(m):
     elif m == WLAN.STA_AP:
         print("STA_AP", end='')
 
+print(os.uname().sysname.lower() + '-' + binascii.hexlify(machine.unique_id()).decode("utf-8")[-4:], "get_state.py")
 
 print("===== machine ====================================")
 print("unique_id", binascii.hexlify(machine.unique_id()))
@@ -18,8 +19,28 @@ try:
 except:
     pass
 mrc = machine.reset_cause()
-if mrc == 0:
-    print()
+print('reset_cause', mrc, end=' ')
+if mrc == machine.PWRON_RESET:
+    print("PWRON_RESET")
+    # plug in
+    # press reset button on module
+    # reset button on JTAG board
+    # core dump
+elif mrc == machine.HARD_RESET:
+    print("HARD_RESET")
+elif mrc == machine.WDT_RESET:
+    print("WDT_RESET")
+    # machine.reset()
+    # machine.lte_reset()
+elif mrc == machine.DEEPSLEEP_RESET:
+    print("DEEPSLEEP_RESET")
+    # machine.deepsleep()
+elif mrc == machine.SOFT_RESET:
+    print("SOFT_RESET")
+    # Ctrl-D
+elif mrc == machine.BROWN_OUT_RESET:
+    print("BROWN_OUT_RESET")
+
 mwr = machine.wake_reason()
 print("wake_reason", mwr, end=' ')
 if mwr[0] == machine.PWRON_WAKE:
@@ -32,7 +53,6 @@ elif mwr[0] == machine.RTC_WAKE:
     # from deepsleep
 elif mwr[0] == machine.ULP_WAKE:
     print("ULP_WAKE")
-# print("rng", machine.rng())
 
 print("===== os =========================================")
 print("sysname", os.uname().sysname) # e.g., GPy

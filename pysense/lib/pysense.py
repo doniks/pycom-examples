@@ -1,1 +1,1 @@
-../../pycom-libraries/pysense/lib/pysense.py
+/home/peter/docs/pycom-libraries/pysense/lib/pysense.py

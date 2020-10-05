@@ -15,6 +15,30 @@ def init():
         print("eth mac", binascii.hexlify(e.mac()))
     return
 
+def isconnected(timeout_s=10):
+    if e is None:
+        print("eth not initialized")
+        return False
+    i = 0
+    for i in range(0,timeout_s * 10):
+        if e.isconnected():
+            print("eth connected")
+            break
+        else:
+            if i % 10 == 0:
+                print("eth not connected ... ", int(i/10)) # e.ifconfig()) #, end=" ")
+            time.sleep(0.1)
+        i+=1
+
+    if e.isconnected():
+        print("hostname", e.hostname())
+        #print("isconnected", e.isconnected())
+        print("ifconfig", e.ifconfig()) # (ip, subnet_mask, gateway, DNS_server)
+        return True
+    else:
+        print("eth not connected after timeout")
+        return False
+
 def reconnect(ip_mask_gw_dns=None):
     init()
     if e.isconnected():
@@ -28,7 +52,7 @@ def reconnect(ip_mask_gw_dns=None):
         e.init()
     return connect(ip_mask_gw_dns)
 
-def connect(config=None, timeout_s=5):
+def connect(config=None, timeout_s=10):
     init()
     if e.isconnected():
         print('already connected')
@@ -47,31 +71,15 @@ def connect(config=None, timeout_s=5):
         print("using fixed ip config:", config)
         e.ifconfig(config=config)
     print("connecting eth ...")
-    i = 0
-    for i in range(0,timeout_s * 10):
-        if e.isconnected():
-            print("... eth connected")
-            break
-        else:
-            if i % 10 == 0:
-                print("waiting for connection", int(i/10)) # e.ifconfig()) #, end=" ")
-            time.sleep(0.1)
-        i+=1
-
-    if e.isconnected():
-        print("hostname", e.hostname())
-        print("isconnected", e.isconnected())
-        print("ifconfig", e.ifconfig()) # (ip, subnet_mask, gateway, DNS_server)
-        return True
-    else:
-        print("FAILED to connect eth")
-        return False
+    return isconnected()
 
 def ip():
-    return w.ifconfig()[0]
+    init()
+    return e.ifconfig()[0]
 
 def gw():
-    return w.ifconfig()[2]
+    init()
+    return e.ifconfig()[2]
 
 def ifconfig():
     init()
@@ -80,8 +88,8 @@ def ifconfig():
     return c
 
 def disconnect():
-    if e:
-        e.deinit()
+    init()
+    e.deinit()
 
 if __name__ == "__main__":
     config = None

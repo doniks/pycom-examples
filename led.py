@@ -1,13 +1,15 @@
 from machine import Pin
 import time
 
-led = Pin('G16', mode=Pin.OUT)
+# works on GPy
+
+led = Pin('P9', mode=Pin.OUT) # G 16
 led_off = 1
 led_on = 0
 led(led_off)
 
-button = Pin('G17', mode=Pin.IN, pull=Pin.PULL_UP)
-# works on GPy
+button = Pin('P10', mode=Pin.IN, pull=Pin.PULL_UP) # G17
+
 while True:
     if button():
         # print("not pressed")

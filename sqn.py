@@ -5,16 +5,24 @@ import binascii
 u = None
 
 pins = {
-    'GPy' : ('P5', 'P98', 'P7', 'P99')
+    # pins = ( TXD,   RXD,   RTS,   CTS )
+    'GPy'  : ( 'P5', 'P98',  'P7', 'P99'),
+    'FiPy' : ('P20', 'P18', 'P19', 'P17')
 }
 
 def init(br=None):
     global u
-    if u:
-        return True
-    if br:
-        print('init(', br, ')')
-        u = UART(1, baudrate=br, pins=pins[os.uname().sysname], timeout_chars=10)
+    if not br:
+        if u:
+            # already initialized
+            return True
+        else:
+            # not initialized and no br specified, so, we guess
+            return init(921600) or init(115200)
+    else:
+        p=pins[os.uname().sysname]
+        print('init(', br, ')', p)
+        u = UART(1, baudrate=br, pins=p, timeout_chars=10)
         try:
             at()
             print('init(', br, ') succeeded')
@@ -28,8 +36,6 @@ def init(br=None):
             except:
                 print('init(', br, ') failed', e)
                 return False
-    else:
-        return init(921600) or init(115200)
 
 def help(verbose=False):
     init()
@@ -104,9 +110,11 @@ def smod():
 
 if __name__ == '__main__':
     # init(921600) or init(115200)
-    # at('AT', verbose=True)
+    init()
+    at('AT', verbose=True)
+    smod()
+
     # at('AT+SMOD?')
     # at('AT+BMOD?')
-    # smod()
-    at('AT+SMSWBOOT=?')
+    # at('AT+SMSWBOOT=?', verbose=True)
     # help(True)

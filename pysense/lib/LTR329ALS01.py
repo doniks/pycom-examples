@@ -1,1 +1,1 @@
-../../pycom-libraries/pysense/lib/LTR329ALS01.py
+/home/peter/docs/pycom-libraries/pysense/lib/LTR329ALS01.py

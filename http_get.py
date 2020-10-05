@@ -2,7 +2,8 @@ import socket
 import time
 def_url = 'http://detectportal.firefox.com/'
 
-def http_get(url=None, kb=None, verbose=False, timeout_s=5, do_print=False):
+def http_get(url=None, kb=None, verbose=False, quiet=False, timeout_s=10, do_print=False):
+    # timeout_s=5 times out a lot over eth, especially with debug fw
     if not url:
         if kb is not None:
             if kb == 0:
@@ -42,8 +43,8 @@ def http_get(url=None, kb=None, verbose=False, timeout_s=5, do_print=False):
         url_split = url.split('/')
         host = url_split[2]
         path = '/'
-        if len(url_split) == 4:
-            path = url_split[3]
+        if len(url_split) > 3:
+            path = '/'.join(url_split[3:])
         port = 80
         if ':' in host:
             host, port = host.split(':')
@@ -88,20 +89,28 @@ def http_get(url=None, kb=None, verbose=False, timeout_s=5, do_print=False):
         # print("recv: done")
         if do_print:
             print('#########################', str(buf, 'utf8'), '#########################', sep='\n')
-        # print("close")
-        s.close()
     except Exception as e:
         print("http_get Exception:", e)
         success = False
+    finally:
+        # print("close")
+        try:
+            s.close()
+        except:
+            pass
+
     dur_total_s = (time.ticks_ms() - time_start_ms ) / 1000
     dur_send_s = dur_send_ms / 1000
     dur_recv_s = dur_recv_ms / 1000
-    if success:
-        print("http_get succeeded:", end="")
-    else:
-        print("http_get failed:", end="")
-    print(len_recv, "bytes received in", dur_recv_s, "s ->", bps_recv, "bps")
-    return (success, dur_send_s, dur_recv_s, dur_total_s, len_recv, bps_send, bps_recv)
+    if not quiet:
+        if success:
+            print("http_get succeeded:", end="")
+        else:
+            print("http_get failed:", end="")
+        print(len_recv, "bytes received in", dur_recv_s, "s ->", bps_recv, "bps")
+    retval = (success, dur_send_s, dur_recv_s, dur_total_s, len_recv, bps_send, bps_recv)
+    # print("succ={} dur={} bps={}".format(retval[0], retval[3], retval[6]) )
+    return retval
 
 
 # def http_gets(url = def_url, count=1):
@@ -130,8 +139,8 @@ def http_gets(url = def_url, count=1):
         print('avg  ', avg[1:])
 
 if __name__ == "__main__":
-    # http_get()
-    # http_get(kb=0)
+    #http_get()
+    http_get(kb=10)
     # http_get('http://micropython.org/ks/test.html')
     # http_gets('http://detectportal.firefox.com/')
     # http_gets('http://192.168.178.1/', 1) # router login page
@@ -148,4 +157,4 @@ if __name__ == "__main__":
     # http_gets("http://192.168.0.1/test.bin")
     # http_get("http://192.168.0.1:8000", verbose=True, do_print=True)
     #http_get("http://192.168.0.1:8000/10B.img", verbose=True, do_print=True)
-    http_gets("http://192.168.0.1:8000/10B.img", 100)
+    # http_gets("http://192.168.0.1:8000/10B.img", 100)
