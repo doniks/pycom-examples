@@ -1,7 +1,7 @@
+import time
 
 def dns(host='pycom.io', attempts=1):
     import socket
-    import time
     import os
 
     connected = False
@@ -17,11 +17,11 @@ def dns(host='pycom.io', attempts=1):
         raise Exception(time.time(), "dns lookup failed")
 
 
-def dns_test():
+def dns_test(attempts=3):
     for name in range(ord('a'), ord('n')):
         t = time.ticks_ms()
         h = chr(name)+'.root-servers.net'
-        dns(h, attempts=3)
+        dns(h, attempts=attempts)
         print('h', h, 'seconds:', (time.ticks_ms() - t) / 1000 )
 
 if __name__ == "__main__":
@@ -29,4 +29,4 @@ if __name__ == "__main__":
     import machine
     print(os.uname().sysname, binascii.hexlify(machine.unique_id()), "dns.py")
     # dns('www.pycom.io')
-    dns_test()
+    dns_test(attempts=100)

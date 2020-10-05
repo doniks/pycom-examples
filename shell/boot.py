@@ -1,57 +1,62 @@
 import machine
 import binascii
 import os
+import time
 
 print(os.uname().sysname.lower() + '-' + binascii.hexlify(machine.unique_id()).decode("utf-8")[-4:], "boot.py")
 
-import pycom
+import pycom 
 pycom.heartbeat(False)
 pycom.rgbled(0x000005)
 
-print("boot.py:importing shell tools")
+t = time.ticks_ms()
+print("boot.py:importing shell tools ", end='')
 
-# posix like commands
-try: from cat import cat
+# posix/linux like commands
+try: from shell import *
 except: pass
-try: from cd import cd
-except: pass
-try: from cp import cp
-except: pass
-try: from df import df
-except: pass
+print('.', end='')
 try: from grep import grep
 except: pass
-try: from ls import *
-except: pass
-try: from mkdir import mkdir, rmdir
-except: pass
-try: from mv import mv
-except: pass
-try: from pwd import pwd
-except: pass
-try: from rm import rm
-except: pass
+print('.', end='')
+# try: from hexdump import hexdump
+# except:pass
+# print('.', end='')
 
 # custom pycom dev board commands
 try: from sleep import sleep
 except: pass
-try: from blink import blink
+print('.', end='')
+try: from blink import *
 except: pass
-try: from sdcard import sd
-except: pass
-try: from dns import dns
-except: pass
-try: from http_get import *
-except: pass
-try: from whoami import whoami
-except: pass
-try: from hexdump import hexdump
-except:pass
-try: import ntp
-except:pass
+print('.', end='')
+# try: from rand import rand,randi
+# except: pass
+# print('.', end='')
+
 try: import wlan
 except:pass
-try: import eth
+print('.', end='')
+# try: import eth
+# except:pass
+# print('.', end='')
+#try:
+from ltei import *
+#except:pass
+print('.', end='')
+
+# try: from net import *
+# except:pass
+# print('.', end='')
+try: from dns import dns
+except: pass
+print('.', end='')
+try: from http_get import *
+except: pass
+print('.', end='')
+try: import ntp
 except:pass
+
+print('.', (time.ticks_ms()-t)/1000)
 
 print("boot.py:done")

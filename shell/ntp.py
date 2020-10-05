@@ -1,35 +1,46 @@
 import time
 
 
-def _pretty_time(t):
+def _pretty_time(t, do_return=False):
+    buf=""
     d = t[6]
     if d == 0:
-        print("Mon", end="")
+        buf += "Mon"
     elif d == 1:
-        print("Tue", end="")
+        buf += "Tue"
     elif d == 2:
-        print("Wed", end="")
+        buf += "Wed"
     elif d == 3:
-        print("Thu", end="")
+        buf += "Thu"
     elif d == 4:
-        print("Fri", end="")
+        buf += "Fri"
     elif d == 5:
-        print("Sat", end="")
+        buf += "Sat"
     elif d == 6:
-        print("Sun", end="")
+        buf += "Sun"
     # according to docs, h, m and s are 0 based, but that doesn't seem to be the case in 1.20.2.rc10
-    # print("{:04}-{:02}-{:02} {:02}:{:02}:{:02}".format(t[0], t[1], t[2], t[3]+1, t[4]+1, t[5]+1))
-    print(", {:04}-{:02}-{:02} {:02}:{:02}:{:02}".format(t[0], t[1], t[2], t[3], t[4], t[5]))
+    # buf += "{:04}-{:02}-{:02} {:02}:{:02}:{:02}".format(t[0], t[1], t[2], t[3]+1, t[4]+1, t[5]+1))
+    buf += ", {:04}-{:02}-{:02} {:02}:{:02}:{:02}".format(t[0], t[1], t[2], t[3], t[4], t[5])
+    if do_return:
+        return buf
+    else:
+        print(buf)
 
-def pretty_gmt():
-    _pretty_time(time.gmtime())
+def pretty_gmt(do_return=False):
+    if do_return:
+        return _pretty_time(time.gmtime(), do_return=do_return)
+    else:
+        _pretty_time(time.gmtime(), do_return=do_return)
 
-def pretty_local():
-    _pretty_time(time.localtime())
+def pretty_local(do_return=False):
+    if do_return:
+        return _pretty_time(time.localtime(), do_return=do_return)
+    else:
+        _pretty_time(time.localtime(), do_return=do_return)
 
 def sync(TZ=0):
     from machine import RTC
-    print("sync rtc, TZ=", TZ)
+    print("sync rtc via ntp, TZ=", TZ)
     rtc = RTC()
     print("synced?", rtc.synced())
     rtc.ntp_sync('nl.pool.ntp.org')
@@ -44,15 +55,15 @@ def sync(TZ=0):
             # if rtc.now()[0] == 1970:
             #     print()
             break
-        if i % 10 == 0:
+        if i % 100 == 0:
             print(".", end="")
         time.sleep_ms(1)
     if not rtc.synced():
         raise Exception("RTC did not sync in", timeout_ms/1000, "s")
 
-    print("now", rtc.now())
-    print("gmtime", time.gmtime())
-    print("localtime", time.localtime())
+    print("rtc.now", rtc.now())
+    print("time.gmtime", time.gmtime())
+    print("time.localtime", time.localtime())
     print("gmt  ", end=" ")
     pretty_gmt()
     print("local", end=" ")

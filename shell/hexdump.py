@@ -1,11 +1,12 @@
 import binascii
-def hexdump(filename, print_ascii=True, head=None):
-    f = open(filename, 'r')
-    content = f.read()
-    f.close()
+def hexdump(file=None, buf=None, print_ascii=True, head=None):
+    if file is not None:
+        f = open(filename, 'r')
+        buf = f.read()
+        f.close()
     ct = 0
     ascii_buffer = ""
-    for c in content:
+    for c in buf:
         # pretty print one byte
         print("{:02x} ".format(ord(c)), end="")
         if (0 <= ord(c) and ord(c) <= 0x1f) or ord(c) in [0x23, 0x7f, 0x81, 0x8d, 0x8f, 0x90, 0x9d, 0xa0, 0xad]: # c == '\n' or c == '\r' or (): #ord(c) in [0, 1, 2, 3, 4, 0x7f]:
@@ -47,13 +48,8 @@ def hexdump(filename, print_ascii=True, head=None):
         else:
             print()
 
-def hexdumptest(print_ascii=False):
-    hexdump("/flash/test/test.bin.up", print_ascii)
-
-
 if __name__ == "__main__":
     # hexdump("/flash/test/test.bin.up")
     # hexdump("/flash/test/http_get.recv")
-    # cat("/flash/log_GPy_240ac4c7b250.log")
     # hexdump("/flash/up41065.elf", head=2000)
-    hexdump('ever')
+    hexdump(buf='ever\r\n')

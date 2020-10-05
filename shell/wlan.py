@@ -7,7 +7,7 @@ import binascii
 
 known_nets_dict = {
     # 'ssid2': {'pwd': 'password2', 'wlan_config':  ('10.0.0.114', '255.255.0.0', '10.0.0.1', '10.0.0.1')}, # (ip, subnet_mask, gateway, DNS_server)
-    'MySSID': {'pwd': 'MyPASSWORD'},
+    'openwireless.org': {'pwd': '', 'sec': 0},
 }
 
 w = None
@@ -17,10 +17,15 @@ IP = ""
 def init():
     global w
     if w is not None:
+        #print('already initialized')
         return
     print("Initialise WiFi")
     w = WLAN() # antenna=WLAN.EXT_ANT)
-    w.hostname(binascii.hexlify(machine.unique_id()) + "." + os.uname().sysname + "." + "w")
+    try:
+        w.hostname(binascii.hexlify(machine.unique_id()) + "." + os.uname().sysname + "." + "w")
+        # hostname is not available in 1.18.2
+    except:
+        pass
     # print("ap_mac", binascii.hexlify(w.mac().ap_mac))
     # print("sta_mac", binascii.hexlify(w.mac().sta_mac))
     if ( w.mode() == WLAN.AP ):
@@ -30,6 +35,9 @@ def init():
     # original_auth = w.auth()
 
 def isconnected():
+    if w is None:
+        print("wlan not initialized")
+        return False
     ct = 0;
     while not w.isconnected():
         ct += 1
@@ -57,6 +65,9 @@ def quick(net = ''):
     if not net:
         return quick('Pycom') or connect()
     else:
+        if w.isconnected():
+            print('already connected')
+            return True
         k = known_nets_dict[net]
         sec = k['sec']
         pwd = k['pwd']
@@ -105,14 +116,16 @@ def connect():
             return False
 
 def ip():
+    init()
     return w.ifconfig()[0]
 
 def gw():
+    init()
     return w.ifconfig()[2]
 
 def ifconfig():
     init()
-    c = e.ifconfig()# (ip, subnet_mask, gateway, DNS_server)
+    c = w.ifconfig()# (ip, subnet_mask, gateway, DNS_server)
     print("ifconfig", c)
     return c
 
