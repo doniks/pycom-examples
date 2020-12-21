@@ -6,16 +6,24 @@ def hexdump(file=None, buf=None, print_ascii=True, head=None):
         f.close()
     ct = 0
     ascii_buffer = ""
-    for c in buf:
+    for b in buf:
+        if isinstance(b, int):
+            o = b
+            c = chr(b)
+        elif isinstance(b, str):
+            o = ord(b)
+            c = b
+        else:
+            raise Exception("don't know what to do with", type(b))
         # pretty print one byte
-        print("{:02x} ".format(ord(c)), end="")
-        if (0 <= ord(c) and ord(c) <= 0x1f) or ord(c) in [0x23, 0x7f, 0x81, 0x8d, 0x8f, 0x90, 0x9d, 0xa0, 0xad]: # c == '\n' or c == '\r' or (): #ord(c) in [0, 1, 2, 3, 4, 0x7f]:
+        print("{:02x} ".format(o), end="")
+        if (0 <= o and o <= 0x1f) or o in [0x23, 0x7f, 0x81, 0x8d, 0x8f, 0x90, 0x9d, 0xa0, 0xad]: # c == '\n' or c == '\r' or (): #o in [0, 1, 2, 3, 4, 0x7f]:
             # non-printable characters
             # there are probably many more ... you find one, you fix it
             ascii_buffer += '.'
-        elif ord(c) == 0x5c:
+        elif o == 0x5c:
             ascii_buffer += '\\'
-        elif ord(c) == 0x20:
+        elif o == 0x20:
             ascii_buffer += ' '
         else:
             ascii_buffer += c # str(c)
@@ -53,3 +61,4 @@ if __name__ == "__main__":
     # hexdump("/flash/test/http_get.recv")
     # hexdump("/flash/up41065.elf", head=2000)
     hexdump(buf='ever\r\n')
+    hexdump(buf=b'1234ff')
