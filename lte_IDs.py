@@ -56,7 +56,7 @@ print("imsi", imsi)
 print("\n#################################### decoding ids ....")
 
 print()
-print("IMEI (International Mobile Equipment Identity) - identifies the device")
+print("# IMEI (International Mobile Equipment Identity) - identifies the device")
 print("IMEI", imei, "TAC+Serial+Check len=", len(imei))
 #
 # IMEI (International Mobile Equipment Identity)
@@ -84,7 +84,7 @@ print("Check", imei[-1])
 
 
 print()
-print("ICCID (Integrated Circuit Card Identifier) - identifies the SIM")
+print("# ICCID (Integrated Circuit Card Identifier) - identifies the SIM")
 print("ICCID", iccid, "IIN(MII+CC+II) + Indiv. Account + Check Digit")
 # ICCID (Integrated Circuit Card Identifier)
 # identifies each SIM internationally. A full ICCID is 19 or 20 characters.
@@ -143,7 +143,7 @@ print("II (Issue Identifier 1-4 digits, often equal to MNC)", rest[0:4])
 
 
 print()
-print("IMSI (International Mobile Subscriber Identity) - identifies the subscriber (stored on SIM)")
+print("# IMSI (International Mobile Subscriber Identity) - identifies the subscriber (stored on SIM)")
 print("IMSI", imsi, "MCC+MNC+MSIN")
 # IMSI (International Mobile Subscriber Identity)
 # It is stored inside the SIM.  It consists of three part.
@@ -211,8 +211,8 @@ else:
     print(mnc2, "/", mnc3, "unknown")
 print("MSIN (Mobile Subsciption Identification Number) ", end='')
 if mnc_len is None:
-    print("2/3? ({}){}".format(imsi[5], imsi[6:]))
+    print("mnc len? 2/3? ... msin:({}){}".format(imsi[5], imsi[6:]))
 elif mnc_len == 2:
-    print("2:{}".format(imsi[5:]))
+    print("{}".format(imsi[5:]))
 elif mnc_len == 3:
-    print("3:{}".format(imsi[6:]))
+    print("{}".format(imsi[6:]))
