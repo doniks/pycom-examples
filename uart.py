@@ -15,7 +15,19 @@ import time
 from machine import UART
 import machine
 import binascii
+import os
+uid = binascii.hexlify(machine.unique_id())
+name = os.uname().sysname.lower() + '-' + uid.decode("utf-8")[-4:]
 
+
+def uprint(uart, *values):
+    for v in values:
+        uart.write(str(v))
+        uart.write(' ')
+    uart.write('\r\n')
+
+
+#####################################################
 m = hex(machine.rng())
 
 # uart 0, repl
@@ -27,17 +39,44 @@ m = hex(machine.rng())
 # uart0.write(r)
 # uart0.write(")\n\r")
 
-# print("uart1")
-# # uart1 = UART(1, baudrate=9600, timeout_chars=10)
-# # pins=(TXD, RXD, RTS, CTS)
-# uart1 = UART(1, baudrate=9600 ) # pins=('P23', 'P22'))
-# uart1.write("Hello UART 1 (")
-# uart1.write(m)
-# uart1.write(")\n\r")
-# print("uart1 done")
+print("uart1")
+# uart1 = UART(1, baudrate=9600, timeout_chars=10)
+# pins=(TXD, RXD, RTS, CTS)
+uart1 = UART(1, baudrate=9600 ) # pins=('P23', 'P22'))
+
+if name == "fipy-2b40":
+    print(name, "recieve")
+    while True:
+        r = uart1.readline()
+        if r is None:
+            print(".", end="")
+        else:
+            print("recv(", len(r), "):[", binascii.hexlify(r), "]", sep='', end='->')
+            try:
+                print('"', r.decode('utf-8'), '"', sep='')
+            except:
+                print()
+        time.sleep(0.1)
+
+
+print(name, "send")
+
+
+uart1.write("Hello UART 1 (")
+uart1.write(m)
+uart1.write(")\n\r")
+
+while True:
+    # uprint(uart1, time.time(), m, "jo")
+    uprint(uart1, time.time())
+    print('.', end='')
+    time.sleep(1)
+
+print("uart1 done")
 
 print("uart2")
 # On the GPy/FiPy UART2 is unavailable because it is used to communicate with the cellular radio.
+# OSError: resource not available
 uart2 = UART(2, baudrate=9600, pins=('P8', 'P9', 'P10', 'P11'), timeout_chars=10)
 # uart2 = UART(2, baudrate=9600, pins=('P8', 'P9'), timeout_chars=10)
 print("uart2 tx")
