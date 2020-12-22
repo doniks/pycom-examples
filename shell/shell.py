@@ -1,6 +1,6 @@
 import os
 
-# COMMANDS: ls() ll() find() du()
+# COMMANDS: ls() ll() find() du() df() cat() tee() grep() cp() mv() rm() mkdir() rmdir() cd() pwd()
 #
 # EXAMPLES:
 # ls('/flash/lib')
@@ -9,8 +9,6 @@ import os
 
 # TODO:
 # implement wildcards
-# move cd() pwd() df() here
-# probably rm() cat() mv() as well? they all kinda belong together and they all should support wildcards
 # fix/implement find(/flash/foo*/bar.*', do_return=True) and cat(find('thingy.txt', do_return=True)) mv(find('*.py'), '/flash/backup/')
 
 # add a trailing /
@@ -290,7 +288,7 @@ def df(part='', verbose=True):
 def fs():
     print('Filesystem:', pycom.bootmgr()[1])
 
-def sd():
+def mount_sd():
     from machine import SD
     sd = SD()
     # raises "OSError: the requested operation failed" on PyJTAG
@@ -305,6 +303,10 @@ def sd():
             print("Exception while trying to mount:", e)
     os.chdir('/sd')
     print('/sd :', os.listdir())
+
+def umount_sd():
+    os.umount('/sd')
+    ls('/')
 
 def cp(src, dst, force=False, _buf_size=1000):
     import os
@@ -417,7 +419,6 @@ def tee(content, filename, append=False):
         with open(filename, 'w') as f:
             f.write(content)
 
-
 def grepf(regex, filename, line_numbers=False, do_return=False):
     import re
     ct = 0
@@ -468,40 +469,58 @@ def grep(regex, str='', file='', line_numbers=False, do_return=False):
     else:
         raise Exception("Specify either a string 'str', or a filename 'file'")
 
-
-if __name__ == "__main__":
-    # ll()
-    # ls('/flash')
-    # ll('/flash')
-    # cd('/flash')
-    # ll('main.py')
-    # cat('main.py')
+def _test():
+    ll()
+    ls('/flash')
+    ll('/flash')
+    cd('/flash')
+    ll('main.py')
+    cat('main.py')
     find('/flash') # FIXME doesn't recurse :(
     pwd()
-    ls()
-    # ll()
-    # df()
-    # grep('isconnected', file='lte.py')
-
-
+    df()
+    grep('import', file='main.py')
     # mkdir('/flash/stuff') and mkdir('/flash/stuff')
-    # rm('/flash/home', True)
-    #_wildcard('/sd/CAT*/mtool*')
-    # ls('/sd')
-    # find('/sd/CATM1-41065', 'updater')
-    #find('/', 'updater')
-    #find(name='update')
-    # ll("/flash/up41065.elf")
-    # print(find(name='.*33080.*', type='f', do_return=True))
-    #print(find(name='.*NB1.*', type='d', do_return=True))
-    # print(find(name='.*41065.*', type=None, do_return=True))
+    # rm('/flash/main.py')
 
+if __name__ == "__main__":
+    ls()
+    ll()
+    if False:
+        tee('import pycom\npycom.heartbeat(False)\npycom.rgbled(0x111100)', '/flash/boot.py')
+        cat('main.py')
+        cat('boot.py')
+        rm('boot.py')
+        rm('main.py')
+        import machine
+        machine.reset()
+        # tee(lte.at('AT+SQNBANDSEL?', do_return=True),'/flash/bandsel.log')
+        # cat('/flash/bandsel.log')
+    if False:
+        mount_sd()
+        find('/sd')
+        ls('/sd/CATM1-41065')
+        ls('/sd/NB1-41019')
+        import sqnsupgrade
+        sqnsupgrade.info()
+        # published
+        sqnsupgrade.run('/sd/CATM1-41065/CATM1-41065.dup', debug=True)
+        sqnsupgrade.run('/sd/CATM1-41065/CATM1-41065.dup', '/sd/CATM1-41065/updater.elf', debug=True)
+        sqnsupgrade.run('/sd/NB1-41019/NB1-41019.dup', debug=True)
+        # CAT-M1
+        sqnsupgrade.run('/sd/LR5.2.1.0-48829-2.dup', load_fff=False, debug=True)
+        sqnsupgrade.run('/sd/LR5.2.1.0-48829-2.dup', debug=True)
+        # NB-IoT
+        sqnsupgrade.run('/sd/NB1-46262/NB1-46262.dup', debug=True)
+        sqnsupgrade.run('/sd/NB1-48939/NB1-48939.dup', debug=True)
+        machine.reset()
+        #_wildcard('/sd/CAT*/mtool*')
+        # find('/sd/CATM1-41065', 'updater')
 
-    # lte.at('AT+SQNBANDSEL=?')
-    # lte.at('AT+SQNBANDSEL?')
-    # tee(lte.at('AT+SQNBANDSEL=?', do_return=True),'/flash/bandsel')
-    # tee(lte.at('AT+SQNBANDSEL?', do_return=True),'/flash/bandsel.log')
-    # cat('/flash/bandsel')
-    # cat('/flash/bandsel.log')
-
+        #find('/', 'updater')
+        #find(name='update')
+        # ll("/flash/up41065.elf")
+        # print(find(name='.*33080.*', type='f', do_return=True))
+        #print(find(name='.*NB1.*', type='d', do_return=True))
+        # print(find(name='.*41065.*', type=None, do_return=True))
     pass
