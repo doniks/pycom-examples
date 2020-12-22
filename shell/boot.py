@@ -5,7 +5,7 @@ import time
 
 print(os.uname().sysname.lower() + '-' + binascii.hexlify(machine.unique_id()).decode("utf-8")[-4:], "boot.py")
 
-import pycom 
+import pycom
 pycom.heartbeat(False)
 pycom.rgbled(0x000005)
 
@@ -13,50 +13,45 @@ t = time.ticks_ms()
 print("boot.py:importing shell tools ", end='')
 
 # posix/linux like commands
-try: from shell import *
-except: pass
-print('.', end='')
-try: from grep import grep
-except: pass
-print('.', end='')
-# try: from hexdump import hexdump
-# except:pass
-# print('.', end='')
+try:
+    print('s', end='')
+    from shell import *
+except:
+    print('S', end='')
 
 # custom pycom dev board commands
-try: from sleep import sleep
-except: pass
-print('.', end='')
-try: from blink import *
-except: pass
-print('.', end='')
-# try: from rand import rand,randi
-# except: pass
-# print('.', end='')
-
-try: import wlan
-except:pass
-print('.', end='')
+try:
+    print('w', end='')
+    import wlan
+except:
+    print('W', end='')
+# print('e', end='')
 # try: import eth
 # except:pass
-# print('.', end='')
-#try:
-from ltei import *
-#except:pass
-print('.', end='')
+# try:
+#     print('l', end='')
+#     from lte import *
+# except:
+#     print('x', end='')
 
+# print('n', end='')
 # try: from net import *
 # except:pass
-# print('.', end='')
-try: from dns import dns
-except: pass
-print('.', end='')
-try: from http_get import *
-except: pass
-print('.', end='')
-try: import ntp
-except:pass
+try:
+    print('d', end='')
+    from dns import *
+except:
+    print('D', end='')
+# print('h', end='')
+# try: from http_get import *
+# except: pass
+try:
+    print('n', end='')
+    import ntp
+except:
+    print('N', end='')
+    pass
 
-print('.', (time.ticks_ms()-t)/1000)
+print(' ...', (time.ticks_ms()-t)/1000)
 
 print("boot.py:done")
