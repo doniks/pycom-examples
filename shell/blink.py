@@ -3,11 +3,37 @@ import time
 import os
 import machine
 import binascii
-def_color=0x330033 # nicely recognisable at daylight
-def_color=0x220022 # not too bright, still ok-ish at daylight
+
+# intensity=0x05
+# intensity=0x07 # at night: comfortable to look at, lowest value where there is still a decent color contrast
+# intensity=0x08
+intensity=0x0a   # at night: comfortable
+# intensity=0x11 # at night: quite bright, possible to look at
+# intensity=0x22 # at daylight: noticable, but a bit dull. at night: very bright
+# intensity=0x33
+# intensity=0x55 # at daylight: a tad too bright
+# intensity=0x88 # at dayligh: bright, you don't want to look straight at it
+
+#######################################################
+mask_red   = 0xff0000
+mask_green = 0x00ff00
+mask_blue  = 0x0000ff
+color_red   = (intensity<<16)
+color_green = (intensity<<8)
+color_blue  = (intensity)
+color_white      = (color_red | color_green | color_blue)
+color_yellow     = (color_red | color_green)
+color_light_blue = (color_green | color_blue)
+color_purple     = (color_red | color_blue)
+color_orange     = (color_red | int(intensity * 0.7)<<8 )
+
+# def_color=0x330033 # nicely recognisable at daylight
+# def_color=0x220022 # not too bright, still ok-ish at daylight
 # def_color=0x090009 # night
+def_color=color_purple
 
 def blink(repetitions=5, color=def_color, on_ms=100, off_ms=100 ):
+    print(repetitions, hex(color), on_ms, off_ms)
     hb = pycom.heartbeat()
     if hb:
         pycom.heartbeat(False)
@@ -27,7 +53,24 @@ def blink(repetitions=5, color=def_color, on_ms=100, off_ms=100 ):
     if hb:
         pycom.heartbeat(hb)
 
-def whoami(verbose=False):
+def led(color):
+    pycom.heartbeat(False)
+    pycom.rgbled(color)
+
+def led_off():
+    led(0)
+
+def fw_type():
+    u = os.uname()
+    # fixme: pymesh
+    if hasattr(u, 'pygate'):
+        return 'pygate'
+    elif hasattr(u, 'pybytes'):
+        return 'pybytes'
+    else:
+        return 'base'
+
+def whoami(verbose=False, veryverbose=False):
     import machine
     import binascii
     import os
@@ -35,10 +78,12 @@ def whoami(verbose=False):
     name = os.uname().sysname.lower() + '-' + uid.decode("utf-8")[-4:]
     print(name)
     if verbose:
+        print("type", fw_type())
         for attr in dir(os.uname()):
             if attr[0] != '_':
                 # filter out __class__
                 print(attr, getattr(os.uname(),attr))
+    if veryverbose:
         if os.uname().nodename == 'GPy' or os.uname().nodename == 'FiPy':
             from network import LTE
             lte = LTE()
@@ -111,13 +156,18 @@ if __name__ == "__main__":
     import os
     import binascii
     import machine
+    print(os.uname().sysname.lower() + '-' + binascii.hexlify(machine.unique_id()).decode("utf-8")[-4:], "blink.py")
+    blink()
+    whoami(True, True)
+
+    # pycom.rgbled(color_orange)
+
     # blink(repetitions=0, on_ms=1500, off_ms=500)
     # 0xffff00 # yellow
     # blink(3, 0x333300, 500, 100)
     #blink(10, 0x330033, 500)
-    print(os.uname().sysname.lower() + '-' + binascii.hexlify(machine.unique_id()).decode("utf-8")[-4:], "blink.py")
     # print(os.uname())
-    pretty_reset_cause()
-    pretty_wake_reason()
-    blink()
-    whoami(True)
+    # pretty_reset_cause()
+    # pretty_wake_reason()
+    # whoami(False, True)
+    # blink(10, color_orange)
