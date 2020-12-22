@@ -38,7 +38,7 @@ def pretty_local(do_return=False):
     else:
         _pretty_time(time.localtime(), do_return=do_return)
 
-def sync(TZ=0):
+def sync(TZ=0, timeout_s = 30):
     from machine import RTC
     print("sync rtc via ntp, TZ=", TZ)
     rtc = RTC()
@@ -48,10 +48,10 @@ def sync(TZ=0):
     #time.sleep_ms(750)
     time.timezone(TZ * 3600)
 
-    timeout_ms = 10000
+    timeout_ms = 1000 * timeout_s
     for i in range(0, timeout_ms):
         if rtc.synced():
-            print("rtc is synced")
+            print("rtc is synced after", i/1000, "s")
             # if rtc.now()[0] == 1970:
             #     print()
             break
@@ -71,4 +71,16 @@ def sync(TZ=0):
 
 
 if __name__ == "__main__":
-    sync(TZ=2) # 2 = EU daylight savings
+    print(time.time())
+    # sync(TZ=2) # 2 = EU daylight savings
+    sync(TZ=1) # 1 = EU regular time
+    t = time.time()
+    print("s", t)
+    t /= 60
+    print("m", int(t))
+    t /= 60
+    print("h", int(t))
+    t /= 24
+    print("d", int(t))
+    t /= 365
+    print("y", int(t))
