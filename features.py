@@ -8,16 +8,28 @@ def features(on=None):
     if on is None:
         print("heartbeat   ", pycom.heartbeat_on_boot())
         print("lte         ", pycom.lte_modem_en_on_boot())
-        print("pybytes     ", pycom.pybytes_on_boot())
-        print("smart_config", pycom.smart_config_on_boot())
+        try:
+            print("pybytes     ", pycom.pybytes_on_boot())
+        except:
+            pass
+        try:
+            print("smart_config", pycom.smart_config_on_boot())
+        except:
+            pass
         print("wdt         ", pycom.wdt_on_boot())
         print("wifi        ", pycom.wifi_on_boot())
     else:
         print("configure all features as", on)
         pycom.heartbeat_on_boot(on)
         pycom.lte_modem_en_on_boot(on)
-        pycom.pybytes_on_boot(on)
-        pycom.smart_config_on_boot(on)
+        try:
+            pycom.pybytes_on_boot(on)
+        except:
+            pass
+        try:
+            pycom.smart_config_on_boot(on)
+        except:
+            pass
         pycom.wdt_on_boot(on)
         pycom.wifi_on_boot(on)
         features(None)
@@ -34,3 +46,15 @@ if __name__ == '__main__':
     if False:
         features(True) # turn everything on
         features(False) # turn everything off
+        print(pycom.heartbeat_on_boot())
+        print(pycom.lte_modem_en_on_boot())
+        print(pycom.pybytes_on_boot())
+        print(pycom.smart_config_on_boot())
+        print(pycom.wdt_on_boot())
+        print(pycom.wifi_on_boot())
+        pycom.heartbeat_on_boot(False)
+        pycom.lte_modem_en_on_boot(False)
+        pycom.pybytes_on_boot(False)
+        pycom.smart_config_on_boot(False)
+        pycom.wdt_on_boot(False)
+        pycom.wifi_on_boot(False)
