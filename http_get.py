@@ -2,8 +2,10 @@ import socket
 import time
 def_url = 'http://detectportal.firefox.com/'
 
-def http_get(url=None, kb=None, verbose=False, quiet=False, timeout_s=10, do_print=False):
-    # timeout_s=5 times out a lot over eth, especially with debug fw
+def http_get(url=None, kb=None, verbose=False, quiet=False, timeout_s=10, do_print=False, limit_b=None):
+    # timeout_s=
+    # 5 times out a lot over eth, especially with debug fw
+    # 10 takes really long, esp testing lte lost connections is really annoying that way
     if not url:
         if kb is not None:
             if kb == 0:
@@ -29,6 +31,7 @@ def http_get(url=None, kb=None, verbose=False, quiet=False, timeout_s=10, do_pri
         else:
             url = def_url
 
+    host = None
     time_start_ms = time.ticks_ms()
     dur_send_ms = 0
     dur_recv_ms = 0
@@ -83,6 +86,10 @@ def http_get(url=None, kb=None, verbose=False, quiet=False, timeout_s=10, do_pri
                     #     print(str(data, 'utf8'), end='')
 
                 success = True
+                if limit_b and len_recv >= limit_b:
+                    if verbose:
+                        print("stopping after", len_recv, ">= limit_b =", limit_b)
+                    break
                 pass
             else:
                 break
@@ -90,7 +97,7 @@ def http_get(url=None, kb=None, verbose=False, quiet=False, timeout_s=10, do_pri
         if do_print:
             print('#########################', str(buf, 'utf8'), '#########################', sep='\n')
     except Exception as e:
-        print("http_get Exception:", e)
+        print("http_get Exception:", e, "(", host, ")")
         success = False
     finally:
         # print("close")
@@ -139,22 +146,26 @@ def http_gets(url = def_url, count=1):
         print('avg  ', avg[1:])
 
 if __name__ == "__main__":
-    #http_get()
-    http_get(kb=10)
-    # http_get('http://micropython.org/ks/test.html')
-    # http_gets('http://detectportal.firefox.com/')
-    # http_gets('http://192.168.178.1/', 1) # router login page
-    # http_get('http://ftp.snt.utwente.nl/pub/docs/rfc/rfc1498.json') # 1000 B
-    # http_get.http_gets('http://ftp.snt.utwente.nl/pub/docs/rfc/rfc1535.html') #   10 KiB
-    # http_get('http://ftp.snt.utwente.nl/pub/docs/rfc/rfc753.html')  #  100 KiB
-    # http_get('http://ftp.snt.utwente.nl/pub/test/1M')               #  977 KiB
-    # http_get('http://ftp.snt.utwente.nl/pub/test/100M')
-    # http_get.http_gets('http://ftp.snt.utwente.nl/pub/test/10M')
-    # http_get.http_gets("http://10.0.103.1/pycom-fwtool-1.16.1-bionic-amd64.deb") # peters laptop in the office
-    # http_get.http_gets("http://192.168.178.81/pycom-fwtool-1.16.1-bionic-amd64.deb") # peters laptop at home via wifi
-    # laptop when directly connected to the PyEthernet
-    # http_gets("http://192.168.0.1/pycom-fwtool-1.16.1-bionic-amd64.deb")
-    # http_gets("http://192.168.0.1/test.bin")
-    # http_get("http://192.168.0.1:8000", verbose=True, do_print=True)
-    #http_get("http://192.168.0.1:8000/10B.img", verbose=True, do_print=True)
-    # http_gets("http://192.168.0.1:8000/10B.img", 100)
+    http_get('http://mqtt.pybytes.pycom.io/', limit_b=100) # 4004 bytes
+    if False:
+        http_get()
+        http_get(kb=10)
+        http_get('http://micropython.org/ks/test.html')
+        http_gets('http://detectportal.firefox.com/')
+        http_gets('http://192.168.178.1/', 1) # router login page
+        http_get('http://ftp.snt.utwente.nl/pub/docs/rfc/rfc1498.json') # 1000 B
+        http_get.http_gets('http://ftp.snt.utwente.nl/pub/docs/rfc/rfc1535.html') #   10 KiB
+        http_get('http://ftp.snt.utwente.nl/pub/docs/rfc/rfc753.html')  #  100 KiB
+        http_get('http://ftp.snt.utwente.nl/pub/test/1M')               #  977 KiB
+        http_get('http://ftp.snt.utwente.nl/pub/test/100M')
+        http_get.http_gets('http://ftp.snt.utwente.nl/pub/test/10M')
+        http_get.http_gets("http://10.0.103.1/pycom-fwtool-1.16.1-bionic-amd64.deb") # peters laptop in the office
+        http_get.http_gets("http://192.168.178.81/pycom-fwtool-1.16.1-bionic-amd64.deb") # peters laptop at home via wifi
+        # laptop when directly connected to the PyEthernet
+        # $ pv -Ss 1K < /dev/zero > 1K.img
+        # $ python3 -m http.server 8000
+        http_gets("http://192.168.0.1/pycom-fwtool-1.16.1-bionic-amd64.deb")
+        http_gets("http://192.168.0.1/test.bin")
+        http_get("http://192.168.0.1:8000", verbose=True, do_print=True)
+        http_get("http://192.168.0.1:8000/1K.img", verbose=True)
+        http_gets("http://192.168.0.1:8000/10B.img", 100)
