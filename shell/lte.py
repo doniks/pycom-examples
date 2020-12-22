@@ -12,8 +12,6 @@ try: from http_get import http_get
 except: pass
 try: import sqnsupgrade
 except: pass
-try: from sdcard import sd
-except: pass
 try: from whoami import whoami
 except: pass
 try: from ntp import *
@@ -29,15 +27,14 @@ lte_debug = False
 
 attach_timeout_s = 1800
 
-# if you run this script multiple times via Play button
-# the following try/except avoids unnecesary re-initialization
-# todo: what does this mean for import & run from another, e.g., main.py
-try:
-    l
-    # print("l exists, no initialization needed")
-except:
-    # print("initialize l=None")
-    l = None
+# *) if you run this script multiple times via Play button the following try/except avoids unnecesary re-initialization
+# *) if you import this from another script `from lte import *` you also get the global variable
+# try:
+#     l
+#     # print("l exists, no initialization needed")
+# except:
+#     # print("initialize l=None")
+#     l = None
 
 band_to_earfcn = [ # (low, mid, high) # band
     (	   0	,	 300	,	 599	), # band 	1
@@ -71,20 +68,62 @@ def sleep(s, verbose=False):
     while s > 0:
         if verbose:
             print(s, end=" ")
+            if s % 30 == 0:
+                print()
         time.sleep(1)
         s -= 1
     if verbose:
         print("")
 
+def test_connection(attempts = 3):
+    for a in range(attempts):
+        try:
+            r = http_get(timeout_s=5, quiet=True)
+            if r[0]:
+                return True
+            print('.', end='')
+        except:
+            print('x', end='')
+            pass
+    return False
+
 def lte_cb_handler(arg):
-    print("CB: LTE Coverage lost")
-    pycom.rgbled(0x220000)
+    print("\n\n\n#############################################################")
+    print("CB LTE Callback Handler")
+    ev = arg.events() # NB: reading the events clears them
+    t = time.ticks_ms()
+    print("CB", t, ev)
+    pycom.rgbled(0x222200)
+    if ev & LTE.EVENT_COVERAGE_LOSS:
+        print("CB", t, "coverage loss")
+    if ev & LTE.EVENT_BREAK:
+        print("CB", t, "uart break signal")
+    # investiage the situation. Generally speaking, it will be one of the following:
+    # - the modem lost connection, but will automatically reestablish it by itself if we give it some time, e.g. new
+    # - the modem can't automatically reconnect, we can try to suspend/resume or reattach
+    # - last resort, if all else fails, we can reset the ESP32 and pray that this helps
+    print("CB", t, "test connection")
+    if test_connection():
+        print("CB", t, "connection ok")
+    else:
+        print("CB", t, "connection not ok, try susp/res")
+        # if suspendresume():
+        #     print("CB suspendresume ok")
+        #     if test_connection():
+        #         print("CB connection ok")
+        #     else:
+        #         l.deinit()
+        #         l.init()
+        #         lte_attach()
+        #         lte_connect()
+    print("CB", t, ev, " done #############################################################")
 
 def lte_init_psm_on():
     global l
     print("lte_init_psm_on")
     l = LTE(psm_period_value=12, psm_period_unit=LTE.PSM_PERIOD_1H,
           psm_active_value=5, psm_active_unit=LTE.PSM_ACTIVE_2S, debug=lte_debug)
+    return l
 
 def lte_init_psm_off():
     global l
@@ -101,14 +140,19 @@ def lte_init_psm_off():
             print("Exception:", e)
             print("try without debug")
             l = LTE()
+    return l
+
 
 def lte_init(use_psm=use_psm):
-    if l is not None:
-        return
+    try:
+        if l is not None:
+            return l
+    except:
+        pass
     if use_psm:
-        lte_init_psm_on()
+        return lte_init_psm_on()
     else:
-        lte_init_psm_off()
+        return lte_init_psm_off()
 
 def at(cmd='', verbose=False, quiet=True, do_return=False, raise_on_error=True):
     if l is None:
@@ -207,24 +251,28 @@ def cgatt(state=None):
 def cereg():
     r = at('AT+CEREG?', do_return=True).strip()
     print(r)
-    r = r.split('+CEREG: ')[1]
-    #print('_', r ,'_', sep='')
-    v = r.split(',')
-    n = int(v[0])
-    print('+CEREG: n=', n, sep='', end='')
-    if n == 0: print('=no urc', end='')
-    elif n == 2: print('=reg+loc urc', end='')
-    s = int(v[1])
-    print(', stat:', s, end='')
-    if s == 0: print('=not registered, not searching', end='')
-    elif s == 1: print('=registered', end='')
-    elif s == 2: print('=searching', end='')
-    if len(v) > 2:
-        tac = v[2].strip('"')
-        ci = v[3].strip('"')
-        act = v[4]
-        print(' tac=', tac, ' ci=', ci, ' act=', act, sep='', end='')
-    print()
+    try:
+        r = r.split('+CEREG: ')[1]
+        #print('_', r ,'_', sep='')
+        v = r.split(',')
+        n = int(v[0])
+        print('+CEREG: n=', n, sep='', end='')
+        if n == 0: print('=no urc', end='')
+        elif n == 1: print('=reg urc', end='')
+        elif n == 2: print('=reg+loc urc', end='')
+        s = int(v[1])
+        print(', stat=', s, end='')
+        if s == 0: print('=not registered, not searching', end='')
+        elif s == 1: print('=registered', end='')
+        elif s == 2: print('=searching', end='')
+        if len(v) > 2:
+            tac = v[2].strip('"')
+            ci = v[3].strip('"')
+            act = v[4]
+            print(' tac=', tac, ' ci=', ci, ' act=', act, sep='', end='')
+        print()
+    except:
+        pass
 
 def psm():
     if not l:
@@ -320,7 +368,7 @@ def lpmc_unconfigure():
         at('AT!="rm /fs/sqn/etc/scripts/61-lpm-enable.cli"')
     except Exception as e:
         print("lpm rm 61", e)
-    lpm()
+    lpmc()
 
 def lpmc_configure():
     try:
@@ -329,10 +377,13 @@ def lpmc_configure():
         at('AT!="echo disablelog 1 >> /fs/sqn/etc/scripts/60-lpm-enable.cli"')
     except Exception as e:
         print("lpm enable 60", e)
-    lpm()
+    lpmc()
 
 def provider(imsi=None):
     apn = None
+    band = None
+    dns0 = '8.8.8.8'
+    dns1 = '9.9.9.9'
     if imsi is None:
         for retry in range(5):
             try:
@@ -350,12 +401,15 @@ def provider(imsi=None):
                 time.sleep(1)
     if imsi is None:
         print("Can't get IMSI")
-        return
         raise Exception("Can't get IMSI", imsi)
 
     mcc = imsi[0:3]
     print("MCC (Mobile Country Code)", mcc, end=": ")
-    print("region(", mcc[0], ")=", sep='', end='')
+    try:
+        print("region(", mcc[0], ")=", sep='', end='')
+    except Exception as e:
+        print("Can't decode IMSI ({}) : {}".format(imsi, e))
+        raise e
     if mcc[0] == '0':
         print("Test network", end=", ")
     elif mcc[0] == '2':
@@ -407,11 +461,17 @@ def provider(imsi=None):
     elif mcc == "901" and mnc2 == "28":
         print("28 Vodafone")
         apn = "pycom.io" # this is for test cards, maybe we need iccid to distinguish
+        dns0 = "172.31.16.100"
+        dns1 = "172.31.32.100"
+        # >>> lte_ifconfig()
+        # APN: "pycom.io.mnc028.mcc901.gprs"
+        # IP: "10.200.2.128
+        # mask: 255.255.255.255"
     else:
         mnc_len = None
         print(mnc2, "/", mnc3, "unknown")
-    print("provider: APN=", apn, sep='')
-    return apn
+    print("provider: APN=", apn, " band=", band, " DNS=", dns0, "/", dns1, sep='')
+    return ( apn, band, dns0, dns1 )
 
 def fsm(write_file=False, do_return=False):
     if write_file:
@@ -533,13 +593,17 @@ def rsrpq(log=False, do_return=False):
     last_msg = ""
     while True:
         r = at('AT+CESQ', do_return=True).strip()
+        # +CESQ: <rxlev>,<ber>,<rscp>,<ecno>,<rsrq>,<rsrp>
         rr = r.split(' ')[1].split(',')
         # RSRP Reference Signal Receive Power [dBm]
         try:
             rsrp = int(rr[5])
         except Exception as e:
-            print('Exception', e, rr)
-            raise(e)
+            print('Exception (int(rr[5])):', e, rr)
+            # can happen, e.g. when URC comes:
+            # Exception invalid syntax for integer with base 10 ['99', '99', '255', '255', '16', '51\n+CEDRXP:']
+            # raise(e)
+            continue
         msg = 'RSRP=' + str(rsrp) + ':'
         if rsrp == 0:
             msg += ' < -140 dBm (poor)'
@@ -637,6 +701,35 @@ def moni(m=9, do_return=False):
     else:
         print(mn)
 
+def lte_set_callback():
+    # l.lte_callback(LTE.EVENT_COVERAGE_LOSS, lte_cb_handler)
+    trigger = 0xFF
+    handler = lte_cb_handler
+    print("set lte_callback", trigger, handler)
+    l.lte_callback(trigger, handler)
+
+def lte_remove_callback():
+    # l.lte_callback(LTE.EVENT_COVERAGE_LOSS, lte_cb_handler)
+    l.lte_callback(0, None)
+
+def lte_attached(dns=None):
+    lte_set_callback()
+    at('AT+CEREG?')
+    if dns is None:
+        config = provider()
+        dns = (config[2], config[3])
+    # at('AT+SQNMONI=7')
+    #moni()
+    #psm()
+    # edrx()
+    lte_ifconfig()
+    d = socket.dnsserver()
+    if d[0] == '0.0.0.0':
+        print("setting dns server", dns[0])
+        socket.dnsserver(0, dns[0])
+        socket.dnsserver(1, dns[1])
+    print("DNS:", socket.dnsserver())
+
 def lte_attach(apn=None, band=None, timeout_s = attach_timeout_s, do_fsm_log=True, do_rssi_log=True):
     if not l:
         lte_init()
@@ -650,37 +743,29 @@ def lte_attach(apn=None, band=None, timeout_s = attach_timeout_s, do_fsm_log=Tru
             whoami()
         except:
             pass
-        l.lte_callback(LTE.EVENT_COVERAGE_LOSS, lte_cb_handler)
+        cfg = provider()
         if not apn:
-            apn = provider()
+            apn = cfg[0]
+        if not band:
+            band = cfg[1]
         else:
             provider()
         print("attach(apn=", apn, ", band=", band, ")", sep='')
         t = time.ticks_ms()
-        if apn:
-            if band:
-                l.attach(apn=apn, band=band)
-            else:
-                l.attach(apn=apn)
-        else:
-            if band:
-                l.attach(band=band)
-            else:
-                l.attach()
+        # if apn:
+        #     if band:
+        l.attach(apn=apn, band=band)
+        # else:
+        #     l.attach(apn=apn)
+        # else:
+        #     if band:
+        #         l.attach(band=band)
+        #     else:
+        #         l.attach()
         print("attach (", (time.ticks_ms() - t ) / 1000, ")" ) # e.g., 0.124 , I think this is usually fast
         lte_waitattached(timeout_s, do_fsm_log=do_fsm_log, do_rssi_log=do_rssi_log)
         print("attaching took", (time.ticks_ms() - t ) / 1000 )
-        at('AT+CEREG?')
-        # at('AT+SQNMONI=7')
-        moni()
-        psm()
-        # edrx()
-        lte_ifconfig()
-        d = socket.dnsserver()
-        if d[0] == '0.0.0.0':
-            print("setting dns server 8.8.8.8")
-            socket.dnsserver(0, '8.8.8.8')
-        print("DNS:", socket.dnsserver())
+        lte_attached((cfg[2], cfg[3]))
 
 def lte_attach_manual(apn=None, band=None, timeout_s = attach_timeout_s, do_fsm_log=True, do_rssi_log=True):
     if not l:
@@ -691,8 +776,6 @@ def lte_attach_manual(apn=None, band=None, timeout_s = attach_timeout_s, do_fsm_
     else:
         if band is None:
             raise Exception('specify band')
-            band = 20
-        l.lte_init(debug=True)
         t = time.ticks_ms()
         at()
         #at('AT')
@@ -721,14 +804,14 @@ def lte_attach_manual(apn=None, band=None, timeout_s = attach_timeout_s, do_fsm_
         #     else:
         #         l.attach()
         print("attach took", (time.ticks_ms() - t ) / 1000 )
-        waitattached(timeout_s, do_fsm_log=do_fsm_log, do_rssi_log=do_rssi_log)
+        lte_waitattached(timeout_s, do_fsm_log=do_fsm_log, do_rssi_log=do_rssi_log)
         print("attaching took", (time.ticks_ms() - t ) / 1000 )
         at('AT+CEREG?')
         # at('AT+SQNMONI=7')
         moni()
         psm()
-        edrx()
-        ifconfig()
+        # edrx()
+        lte_ifconfig()
         d = socket.dnsserver()
         if d[0] == '0.0.0.0':
             print("setting dns server 8.8.8.8")
@@ -743,11 +826,14 @@ def lte_isattached_manual():
     print()
 
 def lte_isattached():
-    try:
-        rsrpq()
-        moni()
-    except:
-        pass
+    if l.isconnected():
+        print("isconnected", True)
+    else:
+        try:
+            rsrpq()
+            moni()
+        except Exception as e:
+            print('Failed to rsrpq() or moni() ... nevermind, carry on ({})'.format(e))
     r = l.isattached()
     print('isattached', r)
     return r
@@ -766,11 +852,15 @@ def lte_waitattached(timeout_s = attach_timeout_s, do_fsm_log=True, do_rssi_log=
     else:
         while not l.isattached():
             if do_fsm_log:
-                f2 = grep("TOP FSM|SEARCH FSM", fsm(do_return=True), do_return=True)
-                if f != f2:
-                    f = f2
-                    print(time.time(), '\n', f, sep='')
-                #cat_fsm()
+                try:
+                    f2 = grep("TOP FSM|SEARCH FSM", fsm(do_return=True), do_return=True)
+                    if f != f2:
+                        f = f2
+                        print(time.time(), '\n', f, sep='')
+                    #cat_fsm()
+                except:
+                    # maybe we didnt' upload grep to the board
+                    pass
             if do_rssi_log:
                 # r2 = at('AT+CSQ', do_return=True).strip()
                 # r2 = moni(do_return=True)
@@ -786,7 +876,7 @@ def lte_waitattached(timeout_s = attach_timeout_s, do_fsm_log=True, do_rssi_log=
         # rssi()
         moni(9)
 
-def sqnsping(num=10, interval=0, do_fsm=False, quiet=False):
+def sqnsping(num=10, ip='8.8.8.8', interval=0, do_fsm=False, quiet=False):
     lte_init()
     if not l.isattached():
         attach()
@@ -798,7 +888,7 @@ def sqnsping(num=10, interval=0, do_fsm=False, quiet=False):
     while num < 0 or ct < num:
         succ = False
         try:
-            resp = at('AT!="IP::ping 8.8.8.8"', do_return=True)
+            resp = at('AT!="IP::ping ' + ip + '"', do_return=True)
             if not quiet:
                 print(resp)
             succ = "from" in resp
@@ -823,13 +913,15 @@ def sqnsping(num=10, interval=0, do_fsm=False, quiet=False):
             elif interval:
                 sleep(interval)
     print("pings:", num, " failed:", ct_fail, " succeeded:", ct_succ, " -- ", round(ct_succ/num*100.0,1), "%", sep="")
+    # sqnsping(3, '18.195.28.152')
+    # sqnsping(3, 'pycom.io.mnc028.mcc901.gprs')
 
 def lte_connect():
     if l.isconnected():
         print("already connected")
         return
     if not l.isattached():
-        attach()
+        lte_attach()
     print("connect")
     t = time.ticks_ms()
     l.connect()
@@ -854,6 +946,7 @@ def lte_ifconfig(verbose=False):
                 if verbose:
                     print(cgcontrdp)
                     # '\r\n+CGCONTRDP: 1,5,"spe.inetd.vodafone.nbiot.mnc028.mcc901.gprs","10.175.213.177.255.255.255.255","","10.105.16.254","10.105.144.254","","",,,1430\r\n\r\nOK\r\n'
+                    #                       APN                                           IP                                  dns             dns
                     # l.send_at_cmd('AT+CGDCONT?')
                     # '\r\n+CGDCONT: 1,"IP","spe.inetd.vodafone.nbiot",,,,0,0,0,0,0,0,1,,0\r\n\r\nOK\r\n'
                     at('AT!="ifconfig"')
@@ -873,7 +966,15 @@ def lte_ifconfig_suspend():
     ifconfig()
     l.pppresume()
 
-def dl(kb=None):
+def suspendresume():
+    l.init(debug=True)
+    l.pppsuspend()
+    l.pppresume()
+    l.init(debug=False)
+    if not l.isconnected():
+        return False
+
+def dl():
     lte_init()
     if not l.isattached():
         attach()
@@ -894,11 +995,17 @@ def dl(kb=None):
                 connect()
     print("download")
     t = time.ticks_ms()
-    r = http_get(kb=kb)
-    print(r)
-    print("http_get took", (time.ticks_ms() - t)/1000)
-    if not r[0]:
-        raise Exception("http_get returned false")
+    # r = http_get(kb=kb, timeout_s=5)
+    r = http_get('http://mqtt.pybytes.pycom.io/', timeout_s=5, limit_b=100, quiet=True )
+    # print(r)
+    t = (time.ticks_ms() - t)/1000
+    if r[0]:
+        print("download succeeded in", t, "seconds (", r[6], " Bps)")
+    else:
+        print("download failed in", t, "seconds")
+    # if not r[0]:
+    #     raise Exception("http_get returned false")
+    return r[0]
 
 def test_dl(delays = [10, 60, 300], repetitions=3):
     lte_init()
@@ -932,7 +1039,7 @@ def test_dl(delays = [10, 60, 300], repetitions=3):
                 pretty_gmt()
                 try:
                     #dl()
-                    r = http_get()
+                    r = http_get('http://mqtt.pybytes.pycom.io/', timeout_s=5, limit_b=100)
                     if r[0]:
                         results_for_delay_rep = (True, a, r[6])
                         success=True
@@ -1015,23 +1122,82 @@ def lte_deinit(detach=True, reset=False):
     else:
         print("Can't deinit")
 
+def lte_poweroff_or_what():
+    # https://forum.pycom.io/topic/5627/pytrack-deepsleep-wakeup-on-pin-problems?_=1594191399370
+    self.lte.disconnect()
+    self.lte.detach()
+    self.lte.send_at_cmd('AT!="CBE::powerOff"')
+    self.lte.deinit()
+
+def diff_log(fct, *args, **kwargs):
+    last = None
+    while True:
+        out = fct(*args, **kwargs)
+        if not out == last:
+            print(time.time(), out)
+            last = out
+        time.sleep(1)
+
 if __name__ == "__main__":
     print(os.uname().sysname.lower() + '-' + binascii.hexlify(machine.unique_id()).decode("utf-8")[-4:], "lte.py")
-    lte_version()
-    lpmc()
-    provider()
-    # bands()
-    lte_attach()
     # lte_init_psm_on()
-    # attach()
-    # connect()
+    lte_init_psm_off()
+    cereg()
+    if False:
+        print(at('AT+CEREG=2'))
+        l.init(debug=False)
+
+    if True:
+        lte_attach()
+    elif False:
+        lte_version()
+        lpmc()
+        provider()
+        # bands()
+        print("attach")
+        l.attach(band=20)
+        l.init(debug=False)
+        diff_log(moni, do_return=True)
+        lte_waitattached()
+    elif False:
+        print("attach manual")
+        lte_attach_manual(band=20)
+
+    if False:
+        if socket.dnsserver()[0] == "0.0.0.0":
+            print("fix dns")
+            if True:
+                print("vodafone DNS")
+                socket.dnsserver(0, "172.31.16.100")
+                socket.dnsserver(1, "172.31.32.100")
+            else:
+                print("fixme")
+
+    if False:
+        l.connect()
+        lte_set_callback()
+        dns()
+        dl()
+        # while True:
+        #     test_dl(delays = [10])
+    if False:
+        rsrpq()
+        at('AT+CESQ')
+        grep("TOP FSM|SEARCH FSM", fsm(do_return=True))
+        print(l.isattached())
+        lte_attached()
+        l.connect()
+        print(l.isconnected())
+
+    #sqnsping(5)
+    #lte_ifconfig()
+    # lte_connect()
+    # while True:
+    #     test_dl(delays = [10])
+        # test_dl(delays = [10, 60, 300, 1800], repetitions=5)
+    # attach(band=20)
     # ntp.sync()
-    # dl()
     # test_dl()
     # machine.deepsleep(10000)
-    # attach(band=20)
-    # sqnsping(10)
-    # connect()
-    # dl()
 
     pass
