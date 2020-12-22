@@ -5,14 +5,19 @@ import time
 
 logfile = "/flash/log_" + os.uname().sysname + "_" + binascii.hexlify(machine.unique_id()).decode() + ".log"
 
-def log(m):
+def log(*messages):
+    # messages = ('eh', 'yo', 666, 'whazzzup!?')
     f = open(logfile, 'a')
-    t = "[" + str(time.time()) + "] "
+    t = "[" + str(time.time()) + "]"
     f.write(t)
-    f.write(m)
+    f.write(' ')
+    for m in messages:
+        print(m)
+        f.write(str(m))
+        f.write(' ')
     f.write('\n')
     f.close()
-    print(t, m, sep="")
+    print(t, *messages)
 
 def catlog():
     f = open(logfile, 'r')
@@ -29,8 +34,8 @@ def rmlog():
         pass
 
 if __name__ == "__main__":
-    # log('eh yo whazzzup!?')
+    # log('eh', 'yo', 666, 'whazzzup!?')
     # print('---')
-    # catlog()
-    # if False: 
-    rmlog()
+    catlog()
+    if False:
+        rmlog()
