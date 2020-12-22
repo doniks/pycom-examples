@@ -3,6 +3,7 @@ import time
 import machine
 import gc
 import micropython
+import pycom
 
 keep_going = True
 
@@ -45,7 +46,9 @@ def th_func(delay, id):
 # create threads with increasing delays
 def thread_test():
     mem()
-    n = 20
+    n = 24
+    # GPy base core dumps at 25 in safe boot mode
+    # , or 21?
     print("Starting %d threads...." %(n))
     for i in range(n):
         _thread.start_new_thread(th_func, (i + 1, i))
