@@ -14,13 +14,13 @@ w = None
 connection = ""
 IP = ""
 
-def init():
+def wlan_init():
     global w
     if w is not None:
         #print('already initialized')
-        return
+        return w
     print("Initialise WiFi")
-    w = WLAN() # antenna=WLAN.EXT_ANT)
+    w = WLAN(antenna=WLAN.EXT_ANT)
     try:
         w.hostname(binascii.hexlify(machine.unique_id()) + "." + os.uname().sysname + "." + "w")
         # hostname is not available in 1.18.2
@@ -33,8 +33,9 @@ def init():
         w.mode(WLAN.STA_AP)
     # original_ssid = w.ssid()
     # original_auth = w.auth()
+    return w
 
-def isconnected():
+def wlan_isconnected():
     if w is None:
         print("wlan not initialized")
         return False
@@ -60,10 +61,10 @@ def isconnected():
     print(host, socket.getaddrinfo(host, 80)[0][4][0])
     return True
 
-def quick(net = ''):
-    init()
+def wlan_quick(net = ''):
+    wlan_init()
     if not net:
-        return quick('Pycom') or connect()
+        return wlan_quick('Pycom') or wlan_connect()
     else:
         if w.isconnected():
             print('already connected')
@@ -73,11 +74,11 @@ def quick(net = ''):
         pwd = k['pwd']
         print('connect', net)
         w.connect(net, ( sec, pwd ) )
-        return isconnected()
+        return w.isconnected()
 
-def connect():
+def wlan_connect():
     global connection, IP, w
-    init()
+    wlan_init()
 
     if w.isconnected():
         print("currently connected ... disconnecting")
@@ -109,22 +110,22 @@ def connect():
                 w.ifconfig(config=net_properties['wlan_config'])
             #print("connect", net_to_use, sec) # , pwd)
             w.connect(net_to_use, (sec, pwd))
-            return isconnected()
+            return wlan_isconnected()
 
         except Exception as e:
             print("Error while trying to connect to Wlan:", e)
             return False
 
-def ip():
-    init()
+def wlan_ip():
+    wlan_init()
     return w.ifconfig()[0]
 
-def gw():
-    init()
+def wlan_gw():
+    wlan_init()
     return w.ifconfig()[2]
 
-def ifconfig():
-    init()
+def wlan_ifconfig():
+    wlan_init()
     c = w.ifconfig()# (ip, subnet_mask, gateway, DNS_server)
     print("ifconfig", c)
     return c
@@ -140,5 +141,7 @@ if __name__ == "__main__":
     print(os.uname().sysname, uid, name, "main.py")
     print("sys", os.uname().sysname)
     print("unique_id", binascii.hexlify(machine.unique_id()))
-    # connect()
-    quick()
+    wlan_quick()
+    if False:
+        wlan_connect()
+        machine.reset()
