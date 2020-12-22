@@ -39,6 +39,32 @@ except:
     # print("initialize l=None")
     l = None
 
+band_to_earfcn = [ # (low, mid, high) # band
+    (	   0	,	 300	,	 599	), # band 	1
+    (	 600	,	 900	,	1199	), # band 	2
+    (	1200	,	1575	,	1949	), # band 	3
+    (	1950	,	2175	,	2399	), # band 	4
+    (	2400	,	2525	,	2649	), # band 	5
+    (	2650	,	2700	,	2749	), # band 	6
+    (	2750	,	3100	,	3449	), # band 	7
+    (	3450	,	3625	,	3799	), # band 	8
+    (	3800	,	3975	,	4149	), # band 	9
+    (	4150	,	4450	,	4749	), # band 	10
+    (	4750	,	4850	,	4949	), # band 	11
+    (	5010	,	5090	,	5179	), # band 	12
+    (	5180	,	5230	,	5279	), # band 	13
+    (	5280	,	5330	,	5379	), # band 	14
+    (	5730	,	5790	,	5849	), # band 	17
+    (	5850	,	5925	,	5999	), # band 	18
+    (	6000	,	6075	,	6149	), # band 	19
+    (	6150	,	6300	,	6449	), # band 	20
+    (	6450	,	7125	,	6599	), # band 	21
+]
+
+earfcn_to_band = {}
+for band in range(1, len(band_to_earfcn)):
+    earfcn_to_band[band_to_earfcn[band]] = band
+
 def sleep(s, verbose=False):
     if verbose:
         print("sleep(", s, ") ", end="")
