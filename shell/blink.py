@@ -7,12 +7,15 @@ import binascii
 # intensity=0x05
 # intensity=0x07 # at night: comfortable to look at, lowest value where there is still a decent color contrast
 # intensity=0x08
-intensity=0x0a   # at night: comfortable
-# intensity=0x11 # at night: quite bright, possible to look at
-# intensity=0x22 # at daylight: noticable, but a bit dull. at night: very bright
+# intensity=0x0a  # at night: comfortable
+# intensity=0x11 # at daylight: bit dull. at night: quite bright, possible to look at
+intensity=0x15
+# intensity=0x19 # at dayligh: noticable. at night: bright
+# intensity=0x22 # at daylight: noticable. at night: very bright
 # intensity=0x33
 # intensity=0x55 # at daylight: a tad too bright
 # intensity=0x88 # at dayligh: bright, you don't want to look straight at it
+# intensity=0xff # go blind :)
 
 #######################################################
 mask_red   = 0xff0000
@@ -32,19 +35,21 @@ color_orange     = (color_red | int(intensity * 0.7)<<8 )
 # def_color=0x090009 # night
 def_color=color_purple
 
-def blink(repetitions=5, color=def_color, on_ms=100, off_ms=100 ):
-    print(repetitions, hex(color), on_ms, off_ms)
+def blink(repetitions=10, color=def_color, on_ms=100, off_ms=100 ):
+    # print(repetitions, hex(color), on_ms, off_ms)
     hb = pycom.heartbeat()
     if hb:
         pycom.heartbeat(False)
 
     ct = repetitions
     while repetitions == 0 or ct >= 0 :
-        if ct % 100 == 0:
-            print(time.time(), 'blink', ct)
+        # if ct % 100 == 0:
+        #     print(time.time(), 'blink', ct)
         if repetitions:
+            # count down until zero
             ct -= 1
         else:
+            # keep blinking forever, but count them
             ct += 1
         pycom.rgbled(color)
         time.sleep_ms(on_ms)
@@ -157,8 +162,12 @@ if __name__ == "__main__":
     import binascii
     import machine
     print(os.uname().sysname.lower() + '-' + binascii.hexlify(machine.unique_id()).decode("utf-8")[-4:], "blink.py")
-    blink()
+    import _thread
+    _thread.start_new_thread(blink, () )
+    time.sleep(0.01)
     whoami(True, True)
+    if False:
+        blink()
 
     # pycom.rgbled(color_orange)
 
