@@ -22,32 +22,24 @@ except:
 # custom pycom dev board commands
 try:
     print('w', end='')
-    import wlan
+    from wlan import *
 except:
     print('W', end='')
 # print('e', end='')
 # try: import eth
 # except:pass
-# try:
-#     print('l', end='')
-#     from lte import *
-# except:
-#     print('x', end='')
-
-# print('n', end='')
-# try: from net import *
-# except:pass
 try:
-    print('d', end='')
-    from dns import *
+    print('l', end='')
+    from lte import *
 except:
-    print('D', end='')
+    print('L', end='')
+
 # print('h', end='')
 # try: from http_get import *
 # except: pass
 try:
     print('n', end='')
-    import ntp
+    from net import *
 except:
     print('N', end='')
     pass

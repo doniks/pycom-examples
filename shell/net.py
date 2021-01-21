@@ -1,6 +1,76 @@
+import time
 import socket
 import time
-def_url = 'http://detectportal.firefox.com/'
+http_get_def_url = 'http://detectportal.firefox.com/'
+
+
+def _pretty_time(t, do_return=False):
+    buf=""
+    d = t[6]
+    if d == 0:
+        buf += "Mon"
+    elif d == 1:
+        buf += "Tue"
+    elif d == 2:
+        buf += "Wed"
+    elif d == 3:
+        buf += "Thu"
+    elif d == 4:
+        buf += "Fri"
+    elif d == 5:
+        buf += "Sat"
+    elif d == 6:
+        buf += "Sun"
+    # according to docs, h, m and s are 0 based, but that doesn't seem to be the case in 1.20.2.rc10
+    # buf += "{:04}-{:02}-{:02} {:02}:{:02}:{:02}".format(t[0], t[1], t[2], t[3]+1, t[4]+1, t[5]+1))
+    buf += ", {:04}-{:02}-{:02} {:02}:{:02}:{:02}".format(t[0], t[1], t[2], t[3], t[4], t[5])
+    if do_return:
+        return buf
+    else:
+        print(buf)
+
+def pretty_gmt(do_return=False):
+    if do_return:
+        return _pretty_time(time.gmtime(), do_return=do_return)
+    else:
+        _pretty_time(time.gmtime(), do_return=do_return)
+
+def pretty_local(do_return=False):
+    if do_return:
+        return _pretty_time(time.localtime(), do_return=do_return)
+    else:
+        _pretty_time(time.localtime(), do_return=do_return)
+
+def rtc_ntp_sync(TZ=0, timeout_s = 30):
+    from machine import RTC
+    print("sync rtc via ntp, TZ=", TZ)
+    rtc = RTC()
+    print("synced?", rtc.synced())
+    rtc.ntp_sync('nl.pool.ntp.org')
+    print("synced?", rtc.synced())
+    #time.sleep_ms(750)
+    time.timezone(TZ * 3600)
+
+    timeout_ms = 1000 * timeout_s
+    for i in range(0, timeout_ms):
+        if rtc.synced():
+            print("rtc is synced after", i/1000, "s")
+            # if rtc.now()[0] == 1970:
+            #     print()
+            break
+        if i % 100 == 0:
+            print(".", end="")
+        time.sleep_ms(1)
+    if not rtc.synced():
+        raise Exception("RTC did not sync in", timeout_ms/1000, "s")
+
+    print("rtc.now", rtc.now())
+    print("time.gmtime", time.gmtime())
+    print("time.localtime", time.localtime())
+    print("gmt  ", end=" ")
+    pretty_gmt()
+    print("local", end=" ")
+    pretty_local()
 
 def http_get(url=None, kb=None, verbose=False, quiet=False, timeout_s=10, do_print=False, limit_b=None):
     # timeout_s=
@@ -9,7 +79,7 @@ def http_get(url=None, kb=None, verbose=False, quiet=False, timeout_s=10, do_pri
     if not url:
         if kb is not None:
             if kb == 0:
-                url = def_url # the smallest file I know
+                url = http_get_def_url # the smallest file I know
                 print('smallest file:', url)
             elif kb == 1:
                 url = 'http://ftp.snt.utwente.nl/pub/docs/rfc/rfc1498.json' # 1000 B
@@ -29,7 +99,7 @@ def http_get(url=None, kb=None, verbose=False, quiet=False, timeout_s=10, do_pri
                 raise Exception("Don't have a url that matches kb=", kb)
             # http_get('http://ftp.snt.utwente.nl/pub/test/100M')
         else:
-            url = def_url
+            url = http_get_def_url
 
     host = None
     time_start_ms = time.ticks_ms()
@@ -119,17 +189,7 @@ def http_get(url=None, kb=None, verbose=False, quiet=False, timeout_s=10, do_pri
     # print("succ={} dur={} bps={}".format(retval[0], retval[3], retval[6]) )
     return retval
 
-
-# def http_gets(url = def_url, count=1):
-#     for c in range(0, count):
-#         try:
-#             http_get(url)
-#             print("success[", c, "]")
-#             # break
-#         except Exception as e:
-#             print("failure[", c, "]:", e)
-
-def http_gets(url = def_url, count=1):
+def http_gets(url = http_get_def_url, count=1):
     stat = [True, 0, 0, 0, 0, 0, 0]
     count_success = 0
     for c in range(0, count):
@@ -145,8 +205,64 @@ def http_gets(url = def_url, count=1):
         avg = [x / count_success for x in stat]
         print('avg  ', avg[1:])
 
+import time
+
+def dns(host="mqtt.pybytes.pycom.io", attempts=1, raise_on_error=True):
+    import socket
+    import os
+
+    connected = False
+    for attempt in range(0,attempts):
+        try:
+            print(time.time(), "dns[{}] success:".format(attempt), host, socket.getaddrinfo(host, 80))
+            connected = True
+            return True
+        except Exception as e:
+            print(time.time(), "dns[{}] failure:".format(attempt), host, e)
+            time.sleep(2)
+    if not connected and raise_on_error:
+        raise Exception(time.time(), "dns lookup failed")
+    return connected
+
+def _dns_test(hostname, attempts=3):
+    t = time.ticks_ms()
+    dns(hostname, attempts=attempts)
+    print('hostname', hostname, 'seconds:', (time.ticks_ms() - t) / 1000 )
+
+def dns_test(index=None, attempts=3):
+    if index is not None:
+        name = ord('a') + index
+        _dns_test(chr(name)+'.root-servers.net', attempts)
+    else:
+        for name in range(ord('a'), ord('n')):
+            _dns_test(chr(name)+'.root-servers.net', attempts)
+
 if __name__ == "__main__":
+    import binascii
+    import machine
+    print(os.uname().sysname, binascii.hexlify(machine.unique_id()), "net.py")
+    dns('www.pycom.io', raise_on_error=False)
+    dns('pybytes.pycom.io', raise_on_error=False)
+    # dns_test(attempts=100)
+    print(time.time())
+    pretty_gmt()
+    pretty_local()
     http_get('http://mqtt.pybytes.pycom.io/', limit_b=100) # 4004 bytes
+
+    if False:
+        # rtc_ntp_sync(TZ=2) # 2 = EU daylight savings
+        rtc_ntp_sync(TZ=1) # 1 = EU regular time
+        t = time.time()
+        print("s", t)
+        t /= 60
+        print("m", int(t))
+        t /= 60
+        print("h", int(t))
+        t /= 24
+        print("d", int(t))
+        t /= 365
+        print("y", int(t))
+
     if False:
         http_get()
         http_get(kb=10)
