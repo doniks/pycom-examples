@@ -1,15 +1,15 @@
-from network import Sigfox
-import socket
 import machine
-import binascii
-from binascii import hexlify
-import pycom
-import time
 import os
-
-uid = binascii.hexlify(machine.unique_id())
+from binascii import hexlify
+uid = hexlify(machine.unique_id())
 name = os.uname().sysname.lower() + '-' + uid.decode("utf-8")[-4:]
 print(name, "sigfox.py")
+
+from network import Sigfox
+import socket
+import pycom
+import time
+
 
 # FIRST TIME:
 # if you haven't set up your device follow these steps:
@@ -56,8 +56,10 @@ downlink = True
 # downlink = False
 count = 100
 sigfox = Sigfox(mode=Sigfox.SIGFOX, rcz=Sigfox.RCZ1)
-print("ID", binascii.hexlify(sigfox.id()))
-print("PAC", binascii.hexlify(sigfox.pac()))
+print("ID", hexlify(sigfox.id()))
+if False:
+    # one time PAC to be used when initially registering device
+    print("PAC", hexlify(sigfox.pac()))
 
 
 s = socket.socket(socket.AF_SIGFOX, socket.SOCK_RAW)
@@ -106,7 +108,7 @@ for ct in range(count):
         if downlink:
             s.setsockopt(socket.SOL_SIGFOX, socket.SO_RX, True) # up and downlink
             m = i + bytes([0x02]) + c + g + r
-            print("send", binascii.hexlify(m), "and wait for reception")
+            print("send", hexlify(m), "and wait for reception")
             s.send(m)
             pycom.rgbled(0x000011)
             ct_send += 1
@@ -126,7 +128,7 @@ for ct in range(count):
         else:
             s.setsockopt(socket.SOL_SIGFOX, socket.SO_RX, False) # uplink only
             m = i + bytes([0x01]) + g + r
-            print("send", binascii.hexlify(m))
+            print("send", hexlify(m))
             s.send(m)
             pycom.rgbled(0x000011)
             ct_send += 1
