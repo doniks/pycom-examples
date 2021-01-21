@@ -12,15 +12,15 @@ print(name, "lte_simple.py")
 
 print("init")
 t = time.time()
-lte = LTE() # debug=False)
+lte = LTE(debug=True)
 
-lte.send_at_cmd('AT+COPS=?')
+# lte.send_at_cmd('AT+COPS=?')
 # '\r\n+COPS: (2,"Vodafone@","VF","20404",9),,(0,1,2,3,4),(0,1,2)\r\n\r\nOK\r\n'
 
-print("attach", end="")
-t = time.time()
+print("attach")
 #### amarisoft (the "anritsu" or the "blank" sim)
-lte.attach(band=20)
+# lte.attach()
+# lte.attach(band=20)
 # lte.attach(band=20)
 # lte.attach(apn="Internet")
 #### pycom vodafone
@@ -30,28 +30,31 @@ lte.attach(band=20)
 # lte.attach()
 # lte.attach(cid=1, band=20, apn="spe.inetd.vodafone.nbiot", type=LTE.IP)
 # lte.attach(band=20, apn="spe.inetd.vodafone.nbiot")
+#### Jersey Telecom
+lte.attach(band=8)
 
+time.sleep(10)
 while not lte.isattached():
     print(".", end="")
-    time.sleep(1)
-print(time.time() - t, "seconds")
-print(lte.time())
+    time.sleep(10)
+print("\nattached")
 
-
-print("connect", end="")
-t = time.time()
+print("connect")
 lte.connect() # legacy=True)
 while not lte.isconnected():
     print(".", end="")
-    time.sleep(1)
-print(time.time() - t , "seconds")
+    time.sleep(2)
+print("\nconnected")
 
 host = "pycom.io"
 print(host, socket.getaddrinfo(host, 443)[0][-1][0])
 
 if False:
-    print("disconnect")
-    lte.disconnect()
+    # print("disconnect")
+    # lte.disconnect()
 
-    print("dettach")
+    print("detach")
     lte.detach()
+else:
+    print("deinit")
+    lte.deinit()

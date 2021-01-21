@@ -19,7 +19,6 @@ except: pass
 try: from shell import *
 except: pass
 
-
 use_edrx = False
 use_psm = False
 lte_debug = False
@@ -36,31 +35,132 @@ attach_timeout_s = 1800
 #     # print("initialize l=None")
 #     l = None
 
-band_to_earfcn = [ # (low, mid, high) # band
-    (	   0	,	 300	,	 599	), # band 	1
-    (	 600	,	 900	,	1199	), # band 	2
-    (	1200	,	1575	,	1949	), # band 	3
-    (	1950	,	2175	,	2399	), # band 	4
-    (	2400	,	2525	,	2649	), # band 	5
-    (	2650	,	2700	,	2749	), # band 	6
-    (	2750	,	3100	,	3449	), # band 	7
-    (	3450	,	3625	,	3799	), # band 	8
-    (	3800	,	3975	,	4149	), # band 	9
-    (	4150	,	4450	,	4749	), # band 	10
-    (	4750	,	4850	,	4949	), # band 	11
-    (	5010	,	5090	,	5179	), # band 	12
-    (	5180	,	5230	,	5279	), # band 	13
-    (	5280	,	5330	,	5379	), # band 	14
-    (	5730	,	5790	,	5849	), # band 	17
-    (	5850	,	5925	,	5999	), # band 	18
-    (	6000	,	6075	,	6149	), # band 	19
-    (	6150	,	6300	,	6449	), # band 	20
-    (	6450	,	7125	,	6599	), # band 	21
+band_to_earfcn = [
+#   ( low, mid,high)  # band
+    (-1,-1,-1), # dummy entry for index 0
+    (   0, 300, 599), # 1
+    ( 600, 900,1199), # 2
+    (1200,1575,1949), # 3
+    (1950,2175,2399), # 4
+    (2400,2525,2649), # 5
+    (2650,2700,2749), # 6
+    (2750,3100,3449), # 7
+    (3450,3625,3799), # 8
+    (3800,3975,4149), # 9
+    (4150,4450,4749), # 10
+    (4750,4850,4949), # 11
+    (5010,5090,5179), # 12
+    (5180,5230,5279), # 13
+    (5280,5330,5379), # 14
+    (-2,-2,-2), # 15
+    (-3,-3,-3), # 16
+    (5730,5790,5849), # 17
+    (5850,5925,5999), # 18
+    (6000,6075,6149), # 19
+    (6150,6300,6449), # 20
+    (6450,7125,6599), # 21
 ]
 
 earfcn_to_band = {}
 for band in range(1, len(band_to_earfcn)):
     earfcn_to_band[band_to_earfcn[band]] = band
+
+def find_band(earfcn, verbose=False):
+    if isinstance(earfcn, str):
+        earfcn = int(earfcn)
+    for b in range(len(band_to_earfcn)):
+        x = band_to_earfcn[b]
+        if x[0] <= earfcn and x[2] >= earfcn:
+            if verbose:
+                print("EARFCN", earfcn, "is in range", x, "which is band", b)
+            return b
+    return None
+
+def band():
+    try:
+        mn = moni(do_return=True)
+        print(mn)
+        # +SQNMONI: 20416 Cc:204 Nc:16 RSRP:-80.20 CINR:0.00 RSRQ:-12.90 TAC:31 Id:222 EARFCN:3700 PWR:-59.52 PAGING:64
+        # +SQNMONI: NL KPN Cc:204 Nc:08 RSRP:-90.00 CINR:18.00 RSRQ:-7.70 TAC:64503 Id:176 EARFCN:6400 PWR:-74.52 PAGING:64
+        # +SQNMONI: Amarisoft Network Cc:001 Nc:01 RSRP:-88.20 CINR:-1.30 RSRQ:-13.30 TAC:2 Id:1 EARFCN:6309 PWR:-67.12 PAGING:128
+        return find_band(int(mn.split(':')[9].split(' ')[0]), verbose=True)
+    except Exception as e:
+        print(e)
+
+_mcc_region = {
+    '0':"Test network",
+    '2':"Europe",
+    '3':"North Americ and Carribean",
+    '4':"Asia and Middle East",
+    '5':"Australia and Oceania",
+    '6':"Africa",
+    '7':"South and Central America",
+    '9':"Worldwide",
+}
+def mcc_region(r):
+    try:
+        return _mcc_region[r]
+    except:
+        return "unknown"
+
+# https://en.wikipedia.org/wiki/List_of_country_calling_codes
+_country = {
+    "882": "XV - International Networks",
+    "883": "XV - International Networks",
+    "31":"NL - Netherlands",
+    "44":"UK - UK, Guernsy, Isle of Man, Jersey",
+    "86":"CN - China",
+}
+def country(cc):
+    try:
+        return _country[cc]
+    except:
+        return "unknown"
+
+# https://en.wikipedia.org/wiki/Mobile_country_code
+_mcc = {
+    "001":"Test networks",
+    "204":"NL",
+    "234":"GB, GG, IM, JE",
+    "901":"International operators",
+}
+def mcc(c):
+    try:
+        return _mcc[c]
+    except:
+        return "unknown"
+
+# https://en.wikipedia.org/wiki/Mobile_country_code
+# An "MCC/MNC tuple" uniquely identifies a mobile network operator (carrier)
+# MCC is three digits, MNC is two or three digits
+_operator = {
+    "00101":"Test Network",
+    "20408":"KPN",
+    "20416":"T-Mobile",
+    "23450":"Jersey Telecom",
+    "90128":"Vodafone",
+}
+def find_operator(mcc_mnc_tuple=None, mcc=None, mnc=None):
+    if mcc_mnc_tuple is None:
+        if mcc is None:
+            return "(no mcc)",None
+        elif mnc is None:
+            return "(mcc={}, no mnc)".format(mcc),None
+        else:
+            mcc_mnc_tuple = mcc + mnc
+    mnc_len = len(mcc_mnc_tuple) - 3
+    try:
+        # firstly try to find as is
+        return (_operator[mcc_mnc_tuple],mnc_len)
+    except:
+        if mnc_len == 3:
+            # secondly, try whether there is a 2 digit mnc
+            try:
+                return _operator[mcc_mnc_tuple[:-1]],2
+            except:
+                pass
+    # lastly, we just don't know
+    return "unknown({})".format(mcc_mnc_tuple),None
 
 def sleep(s, verbose=False):
     if verbose:
@@ -93,6 +193,7 @@ def lte_cb_handler(arg):
     ev = arg.events() # NB: reading the events clears them
     t = time.ticks_ms()
     print("CB", t, ev)
+    pycom.heartbeat(False)
     pycom.rgbled(0x222200)
     if ev & LTE.EVENT_COVERAGE_LOSS:
         print("CB", t, "coverage loss")
@@ -142,7 +243,6 @@ def lte_init_psm_off():
             l = LTE()
     return l
 
-
 def lte_init(use_psm=use_psm):
     try:
         if l is not None:
@@ -178,7 +278,7 @@ def at(cmd='', verbose=False, quiet=True, do_return=False, raise_on_error=True):
             else:
                 print(line)
     if do_return:
-        return retval
+        return retval.strip()
 
 def at_log(cmd):
     resp = ""
@@ -196,10 +296,25 @@ def lte_version(debug=False):
     if debug:
         at('AT!="showver"')
         at('AT!="get_sw_version"')
-    else:
         # at('AT+CGMR')
         # UE5.2.0.3
-        at('ATI1', quiet=True)
+    rat = None # radio access technologie
+    lrv = None
+    lrnum = None
+    try:
+        ver = at('ATI1', quiet=True, do_return=True, raise_on_error=True)
+        lr = ver.split('\n')[1]
+        lrv, lrnum = lr.split('-')
+        print(ver)
+        import re
+        if re.search('^LR5', lrv):
+            rat = 'CAT-M1'
+        elif re.search('^LR6', lrv):
+            rat = 'NB-IoT'
+        print("rat", rat)
+    except Exception as e:
+        print(e)
+    return (rat, lrv, lrnum)
 
 def smod():
     at('AT+SMOD?')
@@ -227,8 +342,59 @@ def bands():
             else:
                 print('not sure which band set we have ... ')
 
-def imsi():
-    at('AT+CIMI')
+def imsi(do_cfun=True, attempts=5):
+    attempt = 0
+    _imsi = at("AT+CIMI", do_return=True, raise_on_error=False)
+    while _imsi == "ERROR" and attempt < attempts:
+        print("imsi failed, attempt [", attempt, "]... ")
+        if attempt == 0 and cfun() == 0:
+            # it doesn't work in CFUN=0, so first time, try to fix it
+            print('cfun 4')
+            cfun(4)
+            time.sleep(0.1)
+        else:
+            time.sleep(0.5)
+        _imsi = at("AT+CIMI", do_return=True, raise_on_error=False)
+        attempt += 1
+    return _imsi
+
+def imsi_decode(_imsi=None, verbose=True):
+    if _imsi is None:
+        _imsi = imsi()
+    if verbose:
+        # print("imsi", _imsi)
+        print("# IMSI (International Mobile Subscriber Identity) MCC+MNC+MSIN")
+        print("# subscriber identification") # stored on SIM
+        print("IMSI", _imsi)
+    # IMSI (International Mobile Subscriber Identity)
+    # It is stored inside the SIM.  It consists of three part.
+    #
+    #     Mobile Country Code (MCC) : First 3 digits of IMSI gives you MCC.
+    #                                 e.g. 310 for USA
+    #     Mobile Network Code (MNC) : Next 2 or 3 digits give you this info.
+    #                                 e.g. 410 for AT&T
+    #     Mobile Station ID (MSID)  : Rest of the digits. Gives away the network you
+    #                                 are using like IS-95, TDMA , GSM etc.
+    #
+    #     Mobile network code (MNC) is used in combination with a mobile country
+    #     code (MCC) (also known as a "MCC / MNC tuple") to uniquely identify a
+    #     mobile phone operator/carrier.
+    _mcc = _imsi[0:3]
+    if verbose:
+        print("  MCC region:", _mcc[0], '-', mcc_region(_mcc[0]))
+        print("  MCC (Mobile Country Code):", _mcc, '-', mcc(_mcc))
+    op,mnc_len = find_operator(_imsi[0:6])
+    if mnc_len is None:
+        if verbose:
+            print("  Can't find operator")
+            return (_mcc,None,None)
+    _mnc=_imsi[3:3+mnc_len]
+    _msin=_imsi[3+mnc_len:]
+    if verbose:
+        print("  Operator: ", _mcc, _mnc, " - ", op, sep='')
+        print("  MNC (Mobile Network Code):", _mnc )
+        print("  MSIN (Mobile Subsciption Identification Number):", _msin)
+    return (_mcc,_mnc,_msin)
 
 def cfun(fun=None):
     if fun is not None:
@@ -248,31 +414,37 @@ def cgatt(state=None):
         r = at('AT+CGATT?', do_return=True).strip()
         print(r)
 
-def cereg():
-    r = at('AT+CEREG?', do_return=True).strip()
-    print(r)
-    try:
-        r = r.split('+CEREG: ')[1]
-        #print('_', r ,'_', sep='')
-        v = r.split(',')
-        n = int(v[0])
-        print('+CEREG: n=', n, sep='', end='')
-        if n == 0: print('=no urc', end='')
-        elif n == 1: print('=reg urc', end='')
-        elif n == 2: print('=reg+loc urc', end='')
-        s = int(v[1])
-        print(', stat=', s, end='')
-        if s == 0: print('=not registered, not searching', end='')
-        elif s == 1: print('=registered', end='')
-        elif s == 2: print('=searching', end='')
-        if len(v) > 2:
-            tac = v[2].strip('"')
-            ci = v[3].strip('"')
-            act = v[4]
-            print(' tac=', tac, ' ci=', ci, ' act=', act, sep='', end='')
-        print()
-    except:
-        pass
+def cereg(n=None):
+    if n is None:
+        r = at('AT+CEREG?', do_return=True).strip()
+        print(r)
+        try:
+            r = r.split('+CEREG: ')[1]
+            #print('_', r ,'_', sep='')
+            v = r.split(',')
+            n = int(v[0])
+            print('  n=', n, sep='', end='')
+            if n == 0: print(': no urc')
+            elif n == 1: print(': reg urc')
+            elif n == 2: print(': reg+loc urc')
+            else: print()
+            s = int(v[1])
+            print('  stat=', s, sep='', end='')
+            if s == 0: print(': not registered, not searching')
+            elif s == 1: print(': registered')
+            elif s == 2: print(': searching')
+            elif s == 5: print(': registered, roaming')
+            else: print()
+            if len(v) > 2:
+                tac = v[2].strip('"')
+                ci = v[3].strip('"')
+                act = v[4]
+                print('  tac=', tac, ' ci=', ci, ' act=', act, sep='')
+        except:
+            pass
+    else:
+        at('AT+CEREG='+str(n))
+        cereg()
 
 def psm():
     if not l:
@@ -331,27 +503,31 @@ def psm():
 #     at('AT+SQNEDRX=3')
 
 def lpmc():
-    L = 'disablelog 1\nsetlpm airplane=1 enable=1\n'
+    LPM = 'disablelog 1\nsetlpm airplane=1 enable=1'
     #print('# lpm 60:')
     try:
-        l = at('AT!="cat /fs/sqn/etc/scripts/60-lpm-enable.cli"', do_return=True)
-        if l == L:
+        lpm = at('AT!="cat /fs/sqn/etc/scripts/60-lpm-enable.cli"', do_return=True)
+        if lpm == LPM:
             print("lpm is configured (60)")
             return True
+        elif len(lpm) == 0:
+            pass
         else:
-            print("lpm: 60-lpm-enable.cli:", l)
+            print("lpm: 60-lpm-enable.cli:<", lpm, ">", sep='')
     except Exception as e:
         pass
         print("Exception while reading lpm 60:", e)
 
     # print('# lpm 61:')
     try:
-        l = at('AT!="cat /fs/sqn/etc/scripts/61-lpm-enable.cli"', do_return=True)
-        if l == L:
+        lpm = at('AT!="cat /fs/sqn/etc/scripts/61-lpm-enable.cli"', do_return=True)
+        if lpm == LPM:
             print("lpm is configured (61)")
             return True
+        elif len(lpm) == 0:
+            pass
         else:
-            print("lpm: 61-lpm-enable.cli:", l)
+            print("lpm: 61-lpm-enable.cli:<", lpm, ">", sep='')
     except Exception as e:
         pass
         print("Exception while reading lpm 61:", e)
@@ -379,99 +555,44 @@ def lpmc_configure():
         print("lpm enable 60", e)
     lpmc()
 
-def provider(imsi=None):
+def provider(_imsi=None):
     apn = None
     band = None
-    dns0 = '8.8.8.8'
-    dns1 = '9.9.9.9'
-    if imsi is None:
-        for retry in range(5):
-            try:
-                imsi = at("AT+CIMI", do_return=True)
-                if imsi:
-                    break
-            except Exception as e:
-                if retry > 2:
-                    print("imsi failed, retry [", retry, "]... ", e)
-                # it doesn't work in CFUN=0
-                if cfun() == 0:
-                    # maybe we shouldn't mess with it ... but it's just more convenient that way :)
-                    print('cfun 4')
-                    cfun(4)
-                time.sleep(1)
-    if imsi is None:
+    dns0 = None
+    dns1 = None
+    rat = (None, None) # (CAT-M1, NB-IoT)
+    name = None
+    # dns0 = '8.8.8.8'
+    # dns1 = '9.9.9.9'
+    if _imsi is None:
+        _imsi = imsi()
+    if _imsi is None:
         print("Can't get IMSI")
-        raise Exception("Can't get IMSI", imsi)
-
-    mcc = imsi[0:3]
-    print("MCC (Mobile Country Code)", mcc, end=": ")
-    try:
-        print("region(", mcc[0], ")=", sep='', end='')
-    except Exception as e:
-        print("Can't decode IMSI ({}) : {}".format(imsi, e))
-        raise e
-    if mcc[0] == '0':
-        print("Test network", end=", ")
-    elif mcc[0] == '2':
-        print("Europe", end=", ")
-    elif mcc[0] == '3':
-        print("North Americ and Carribean", end=", ")
-    elif mcc[0] == '4':
-        print("Asia and Middle East", end=", ")
-    elif mcc[0] == '5':
-        print("Australia and Oceania", end=", ")
-    elif mcc[0] == '6':
-        print("Africa", end=", ")
-    elif mcc[0] == '7':
-        print("South and Central America", end=", ")
-    elif mcc[0] == '9':
-        print("Worldwide", end=", ")
-    else :
-        print("unknown", end=", ")
-
-    print("country=", sep='', end='')
-    if mcc == "001":
-        print("Test networks")
-    elif mcc == "204":
-        print("NL")
-    elif mcc == "234":
-        print("GB, GG, IM, JE")
-    elif mcc == "901":
-        print("International operators")
-    else:
-        print("unknown")
-
-    mnc2=imsi[3:5] # europe 2 digits
-    mnc3=imsi[3:6] # north america 3 digits
-    mnc_len = 2
-    print("MNC (Mobile Network Code)", end=" ")
-    if mcc == "001" and mnc2 == "01":
-        print("01 Test Network")
-    elif mcc == "204" and mnc2 == "04":
-        print("04 Vodafone")
-    elif mcc == "204" and mnc2 == "08":
-        print("08 KPN")
+        raise Exception("Can't get IMSI")
+    mcc,mnc,msin = imsi_decode(_imsi, verbose=True)
+    op = mcc + mnc
+    if op == "00101":
+        name = "Test"
+        rat = (True, True)
+    elif op == "20408":
+        name = "KPN"
         apn = 'simpoint.m2m'
-        print("bands: GSM 900 / GSM 1800 / UMTS 900 / UMTS 2100 / LTE 800 / LTE 1800 / LTE 2100 / LTE 2600")
-    elif mcc == "204" and mnc2 == "16":
-        print("16 T-Mobile")
-    elif mcc == "234" and mnc2 == "50":
-        print("50 Jersey Telecom Ltd.")
-        print("bands: GSM 1800 / UMTS 2100 / LTE 800 / LTE 1800 / LTE 2600")
-    elif mcc == "901" and mnc2 == "28":
-        print("28 Vodafone")
-        apn = "pycom.io" # this is for test cards, maybe we need iccid to distinguish
+    elif op == "23450":
+        name = "JT"
+        band = 8
+        rat = (True, False)
+    elif op == "90128":
+        apn = "pycom.io" # this is for test cards, maybe we need iccid to distinguish?
         dns0 = "172.31.16.100"
         dns1 = "172.31.32.100"
         # >>> lte_ifconfig()
         # APN: "pycom.io.mnc028.mcc901.gprs"
         # IP: "10.200.2.128
         # mask: 255.255.255.255"
-    else:
-        mnc_len = None
-        print(mnc2, "/", mnc3, "unknown")
-    print("provider: APN=", apn, " band=", band, " DNS=", dns0, "/", dns1, sep='')
-    return ( apn, band, dns0, dns1 )
+        name = "Vodafone Int"
+        rat = ['CAT-M1', 'NB-IoT']
+    print("provider: APN=", apn, " band=", band, " DNS=", dns0, "/", dns1, " rat:", rat, " op=", op, " name=", name, sep='')
+    return ( apn, band, dns0, dns1, rat, op, name )
 
 def fsm(write_file=False, do_return=False):
     if write_file:
@@ -493,8 +614,12 @@ def fsm(write_file=False, do_return=False):
 def cat_fsm():
     cat('/flash/fsm.log')
 
-def showphy():
-    at('AT!="showphy"')
+def showphy(do_return=False):
+    if do_return:
+        return at('AT!="showphy"', do_return=do_return)
+    else:
+        at('AT!="showphy"')
+
 
 def stat_log():
     if l is None:
@@ -694,12 +819,55 @@ def rsrpq(log=False, do_return=False):
     # Poor      |            < -100        < -20
     pass
 
-def moni(m=9, do_return=False):
+def moni(m=9, do_return=False, verbose=False):
     mn = at('AT+SQNMONI=' + str(m), do_return=True, raise_on_error=False).strip()
+    # if verbose:
+    #     print(mn)
     if do_return:
         return mn
     else:
-        print(mn)
+        if verbose:
+            r = mn.split(' ')
+            # ['+SQNMONI:', '20416', 'Cc:204', 'Nc:16', 'RSRP:-78.70', 'CINR:0.00', 'RSRQ:-9.70', 'TAC:31', 'Id:445', 'EARFCN:3700', 'PWR:-61.22', 'PAGING:64']
+            assert(len(r) == 12) # for n=9. there are probably other cases, but they need code fixes below
+            assert(r[0] == '+SQNMONI:')
+            i = 1
+            if ':' not in r[i]:
+                print('  netname', r[i])
+                i += 1
+            _mcc = None
+            while ( i < len(r) ):
+                k,v=r[i].split(':')
+                if k == 'Cc':
+                    _mcc = v
+                    print('  Cc (country)', v, mcc(v))
+                elif k == "Nc":
+                    print('  Nc (Network operator code)', v, find_operator(mcc=_mcc, mnc=v)[0])
+                elif k == "RSRP":
+                    print('  RSRP (Reference Signal Received Power)', v)
+                elif k == "CINR":
+                    print('  CINR (Carrier to Interference-plus-Noise Ratio)', v)
+                elif k == "RSRQ":
+                    print('  RSRQ (Reference Signal Received Quality)', v)
+                elif k == 'TAC':
+                    print('  TAC (Tracking Area Code)', v)
+                elif k == 'EARFCN':
+                    print('  EARFCN (E-UTRA Assigned Radio Channel)', v, 'band', find_band(v))
+                elif k == 'Id':
+                    print('  Id (cell identifier)', v)
+                else:
+                    # paging
+                    # DRX cycle in number of radio frames (1 frame = 10ms).
+                    # dBm
+                    # received signal strength in dBm
+                    # drx
+                    # Discontinuous reception cycle length
+                    # n
+                    # progressive number of adjacent cell
+                    print(' ', k, v)
+                i += 1
+        else:
+            print(mn)
 
 def lte_set_callback():
     # l.lte_callback(LTE.EVENT_COVERAGE_LOSS, lte_cb_handler)
@@ -712,22 +880,28 @@ def lte_remove_callback():
     # l.lte_callback(LTE.EVENT_COVERAGE_LOSS, lte_cb_handler)
     l.lte_callback(0, None)
 
-def lte_attached(dns=None):
+def try_set_dns(i,dns):
+    if dns:
+        print("set dnsserver[{}] = {}".format(i,dns))
+        socket.dnsserver(i,dns)
+
+def lte_post_attach_config():
+    # rssi()
     lte_set_callback()
-    at('AT+CEREG?')
-    if dns is None:
-        config = provider()
-        dns = (config[2], config[3])
-    # at('AT+SQNMONI=7')
-    #moni()
-    #psm()
-    # edrx()
+    cereg() # show whether we're roaming
+    # moni()
+    band() # show moni and earfcn/band
+    psm()
+    #edrx()
     lte_ifconfig()
-    d = socket.dnsserver()
-    if d[0] == '0.0.0.0':
-        print("setting dns server", dns[0])
-        socket.dnsserver(0, dns[0])
-        socket.dnsserver(1, dns[1])
+    print(l.time())
+
+def try_fix_dns():
+    if socket.dnsserver()[0] == '0.0.0.0':
+        print("DNS:", socket.dnsserver(), " attempt cfg via provider()")
+        cfg = provider()
+        try_set_dns(0, cfg[2])
+        try_set_dns(1, cfg[3])
     print("DNS:", socket.dnsserver())
 
 def lte_attach(apn=None, band=None, timeout_s = attach_timeout_s, do_fsm_log=True, do_rssi_log=True):
@@ -736,8 +910,9 @@ def lte_attach(apn=None, band=None, timeout_s = attach_timeout_s, do_fsm_log=Tru
     if l.isattached():
         print("already attached")
     else:
+        print("cfun", cfun())
         l.imei()
-        lte_version()
+        v = lte_version()
         lpmc()
         try:
             whoami()
@@ -748,8 +923,10 @@ def lte_attach(apn=None, band=None, timeout_s = attach_timeout_s, do_fsm_log=Tru
             apn = cfg[0]
         if not band:
             band = cfg[1]
-        else:
-            provider()
+        if v[0] == 'CAT-M1' and not cfg[4][0]:
+            print("WARNING: I don't think ", cfg[6], "(", cfg[5], ") supports", v[0])
+        elif v[0] == 'NB-IoT' and not cfg[4][1]:
+            print("WARNING: I don't think ", cfg[6], "(", cfg[5], ") supports", v[0])
         print("attach(apn=", apn, ", band=", band, ")", sep='')
         t = time.ticks_ms()
         # if apn:
@@ -765,7 +942,7 @@ def lte_attach(apn=None, band=None, timeout_s = attach_timeout_s, do_fsm_log=Tru
         print("attach (", (time.ticks_ms() - t ) / 1000, ")" ) # e.g., 0.124 , I think this is usually fast
         lte_waitattached(timeout_s, do_fsm_log=do_fsm_log, do_rssi_log=do_rssi_log)
         print("attaching took", (time.ticks_ms() - t ) / 1000 )
-        lte_attached((cfg[2], cfg[3]))
+        lte_post_attach_config()
 
 def lte_attach_manual(apn=None, band=None, timeout_s = attach_timeout_s, do_fsm_log=True, do_rssi_log=True):
     if not l:
@@ -848,7 +1025,6 @@ def lte_waitattached(timeout_s = attach_timeout_s, do_fsm_log=True, do_rssi_log=
         print("isconnected")
     elif l.isattached():
         print("isattached")
-        rssi()
     else:
         while not l.isattached():
             if do_fsm_log:
@@ -873,8 +1049,6 @@ def lte_waitattached(timeout_s = attach_timeout_s, do_fsm_log=True, do_rssi_log=
             if timeout_s is not None and time.ticks_ms() - t > timeout_ms:
                 raise Exception("Could not attach in {} s".format(timeout_s))
         print("isattached", l.isattached(), "turned true after {} s".format(( time.ticks_ms()-t )  / 1000 ))
-        # rssi()
-        moni(9)
 
 def sqnsping(num=10, ip='8.8.8.8', interval=0, do_fsm=False, quiet=False):
     lte_init()
@@ -932,6 +1106,7 @@ def lte_connect():
         if time.ticks_ms() - t > timeout_ms:
             raise Exception("Could not connect in {} s".format((time.ticks_ms() - t )/ 1000 ))
     print("connecting took", (time.ticks_ms() - t ) / 1000 )
+    try_fix_dns()
 
 def lte_isconnected():
     return l.isconnected()
@@ -1102,9 +1277,13 @@ def long_at():
     l.send_at_cmd('AT+SQNSH=1')
     sleep(1)
 
-def lte_reset():
-    print('lte_reset')
+def lte_reset_everything():
+    print('lte reset')
     l.reset()
+    time.sleep(0.1)
+    print('machine reset')
+    time.sleep(0.1)
+    machine.reset()
 
 def lte_detach():
     l.detach()
@@ -1138,30 +1317,131 @@ def diff_log(fct, *args, **kwargs):
             last = out
         time.sleep(1)
 
+def fw_requires_cereg_2(version):
+    v = version.split('.')
+    def dbg(*m):
+        # print(*m)
+        pass
+    # a.b.c.d
+    # 1.20.3.r3
+    # 1.18.4.rc7
+    a = int(v[0])
+    if a > 1:
+        dbg(">1")
+        return False
+    b = int(v[1])
+    if b <= 18:
+        dbg("<=18")
+        return True
+    if b > 20:
+        dbg(">20")
+        return False
+    if b == 20:
+        dbg("==20")
+        c = int(v[2])
+        if c < 2:
+            dbg("<2")
+            return True
+        if c > 2:
+            dbg(">2")
+            return False
+        dbg("==2")
+        d = v[3]
+        if d[0:2] == "rc":
+            dbg("rc")
+            return True
+        if d[0] == "r":
+            dbg("r")
+            x = int(d[1:])
+            dbg(x)
+            if x <= 2:
+                return True
+            else:
+                return False
+    print("Can't decode", version )
+    return None
+
+
 if __name__ == "__main__":
     print(os.uname().sysname.lower() + '-' + binascii.hexlify(machine.unique_id()).decode("utf-8")[-4:], "lte.py")
     # lte_init_psm_on()
     lte_init_psm_off()
-    cereg()
     if False:
-        print(at('AT+CEREG=2'))
-        l.init(debug=False)
+        # if current cereg is 1, but we're using an old firmware, then reset to previous cereg=2
+        cereg()
+        cereg(2)
+        assert fw_requires_cereg_2("1.20.2.r3") == False
+        assert fw_requires_cereg_2("1.20.2.r2") == True
+        assert fw_requires_cereg_2("1.20.2.rc7") == True
+        assert fw_requires_cereg_2("1.20.3.xxx") == False
+        assert fw_requires_cereg_2("1.20.1.xxx") == True
+        assert fw_requires_cereg_2("1.18.y.xxx") == True
 
-    if True:
+    # fix cereg for old FW (ie before 1.20.2.r2)
+    # two problems here:
+    # a) how to reliably and nicely compare version numbers -> see fw_requires_cereg_2
+    # b) for the time being I still have so many locally built versions flying around that break the logic of the version number
+    # rel = os.uname().release
+    # if rel < '1.20.2.rc99' or rel < '1.20.2.r2':
+    #     print('old')
+    #     if cereg() != 2:
+    #         print('old FW expects cereg=2 ... setting it')
+    #         cereg(2)
+    # elif rel >= '1.20.2.r2':
+    #     print('new')
+    # else:
+    #     print('dunno')
+
+    if False:
         lte_attach()
-    elif False:
+    elif True:
+        print("cfun", cfun())
+        cereg()
         lte_version()
         lpmc()
-        provider()
-        # bands()
-        print("attach")
-        l.attach(band=20)
-        l.init(debug=False)
-        diff_log(moni, do_return=True)
-        lte_waitattached()
+        cfg = provider()
+        bands()
+        # print("attach")
+        # l.attach(band=20)
+        # l.attach(band=cfg[1])
+        # l.init(debug=False)
+        # diff_log(moni, do_return=True)
+        # lte_waitattached()
     elif False:
         print("attach manual")
         lte_attach_manual(band=20)
+    elif True:
+        print("cfun", cfun())
+        smod()
+        bmod()
+        lpmc()
+        bands()
+        lte_version()
+        try:
+            whoami()
+        except:
+            pass
+        l.imei()
+        provider()
+        cereg()
+        cgatt()
+        moni()
+        band()
+        psm()
+        fsm()
+        showphy()
+        rssi()
+        try:
+            rsrpq()
+        except:
+            pass
+        if l.isattached():
+            if l.isconnected():
+                dl()
+            else:
+                sqnsping()
+
+
 
     if False:
         if socket.dnsserver()[0] == "0.0.0.0":
@@ -1185,7 +1465,7 @@ if __name__ == "__main__":
         at('AT+CESQ')
         grep("TOP FSM|SEARCH FSM", fsm(do_return=True))
         print(l.isattached())
-        lte_attached()
+        lte_post_attach_config()
         l.connect()
         print(l.isconnected())
 
