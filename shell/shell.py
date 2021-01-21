@@ -487,15 +487,26 @@ if __name__ == "__main__":
     ls()
     ll()
     if False:
-        tee('import pycom\npycom.heartbeat(False)\npycom.rgbled(0x111100)', '/flash/boot.py')
-        cat('main.py')
+        tee('import pycom\npycom.heartbeat(False)\npycom.rgbled(0x070700)', '/flash/boot.py')
+        tee('''
+        import pycom
+        import time
+        pycom.heartbeat(False)
+        pycom.rgbled(0x110011)
+        time.sleep(1)
+        pycom.heartbeat(True)
+        ''', '/flash/boot.py')
         cat('boot.py')
+        cat('main.py')
         rm('boot.py')
         rm('main.py')
         import machine
         machine.reset()
         # tee(lte.at('AT+SQNBANDSEL?', do_return=True),'/flash/bandsel.log')
         # cat('/flash/bandsel.log')
+        print('''
+        asdf
+        jkl''')
     if False:
         mount_sd()
         find('/sd')

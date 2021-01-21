@@ -20,7 +20,7 @@ def wlan_init():
         #print('already initialized')
         return w
     print("Initialise WiFi")
-    w = WLAN(antenna=WLAN.EXT_ANT)
+    w = WLAN() # antenna=WLAN.EXT_ANT)
     try:
         w.hostname(binascii.hexlify(machine.unique_id()) + "." + os.uname().sysname + "." + "w")
         # hostname is not available in 1.18.2
@@ -35,17 +35,35 @@ def wlan_init():
     # original_auth = w.auth()
     return w
 
-def wlan_isconnected():
+def wlan_waitconnected(timeout_s = 20):
     if w is None:
         print("wlan not initialized")
         return False
+    t = time.ticks_ms()
     ct = 0;
-    while not w.isconnected():
+    # while not w.isconnected():
+    #     ct += 1
+    #     print(".", end="")
+    #     machine.idle()  # save power while waiting
+    #     time.sleep_ms(200)
+    print('Connecting: -', end='')
+    while True:
+        if w.isconnected():
+            print()
+            break
+        if timeout_s is not None and time.ticks_ms() - t > (timeout_s * 1000):
+            print("\nTimeout")
+            return False
         ct += 1
-        print(".", end="")
-        machine.idle()  # save power while waiting
-        time.sleep_ms(200)
-    print("Connected", ct) # , "(", w.ifconfig(), ")")
+        x = ct % 3
+        if x == 0:
+            print('\b\\', end='')
+        elif x == 1:
+            print('\b/', end='')
+        elif x == 2:
+            print('\b-', end='')
+        time.sleep_ms(100)
+    print("Connected in", round((time.ticks_ms() - t) /1000,1), "seconds") # , "(", w.ifconfig(), ")")
     connection = "WLAN"
     ct = 0
     IP = w.ifconfig()[0]
@@ -66,15 +84,16 @@ def wlan_quick(net = ''):
     if not net:
         return wlan_quick('Pycom') or wlan_connect()
     else:
+        # perform a quick connect, ie no scan
         if w.isconnected():
-            print('already connected')
+            print('already connected ({})'.format(w.ssid()))
             return True
+        print("Quick connect", net)
         k = known_nets_dict[net]
         sec = k['sec']
         pwd = k['pwd']
-        print('connect', net)
         w.connect(net, ( sec, pwd ) )
-        return w.isconnected()
+        return wlan_waitconnected(timeout_s=10)
 
 def wlan_connect():
     global connection, IP, w
@@ -84,7 +103,7 @@ def wlan_connect():
         print("currently connected ... disconnecting")
         w.disconnect()
         while w.isconnected():
-            time.sleep_ms(200)
+            time.sleep_ms(100)
 
     print("Scanning for wifi networks")
     available_nets_list = w.scan()
@@ -110,7 +129,7 @@ def wlan_connect():
                 w.ifconfig(config=net_properties['wlan_config'])
             #print("connect", net_to_use, sec) # , pwd)
             w.connect(net_to_use, (sec, pwd))
-            return wlan_isconnected()
+            return wlan_waitconnected()
 
         except Exception as e:
             print("Error while trying to connect to Wlan:", e)
@@ -141,7 +160,7 @@ if __name__ == "__main__":
     print(os.uname().sysname, uid, name, "main.py")
     print("sys", os.uname().sysname)
     print("unique_id", binascii.hexlify(machine.unique_id()))
-    wlan_quick()
+    wlan_connect()
     if False:
-        wlan_connect()
+        wlan_quick()
         machine.reset()

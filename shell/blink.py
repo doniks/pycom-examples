@@ -88,20 +88,15 @@ def rgb2color(red, green, blue):
     return red << 16 | green << 8 | blue
 
 def fade(color=def_color, steps=100, step_ms=200):
-    try:
-        r,g,b = color2rgb(pycom.rgbled())
-        r2,g2,b2 = color2rgb(color)
-        rd = (r2 - r) / steps
-        gd = (g2 - g) / steps
-        bd = (b2 - b) / steps
-        for s in range(steps):
-            c = rgb2color(r + rd*s, g + gd*s, b + bd*s)
-            print(s, hex(c))
-            pycom.rgbled(c)
-    except Exception as e:
-        # print("Error in fade, maybe FW doesn't support rgbled() to return color ({})".format(e))
-        pycom.rgbled(color)
-        time.sleep_ms(steps * step_ms)
+    r,g,b = color2rgb(pycom.rgbled())
+    r2,g2,b2 = color2rgb(color)
+    rd = (r2 - r) / steps
+    gd = (g2 - g) / steps
+    bd = (b2 - b) / steps
+    for s in range(steps):
+        c = rgb2color(r + rd*s, g + gd*s, b + bd*s)
+        print(s, hex(c))
+        pycom.rgbled(c)
 
 def shimmer(repetitions=10, color=def_color, on_ms=100, off_ms=100 ):
     print(repetitions, hex(color), on_ms, off_ms)
@@ -122,7 +117,6 @@ def shimmer(repetitions=10, color=def_color, on_ms=100, off_ms=100 ):
         fade(0)
     if hb:
         pycom.heartbeat(hb)
-
 
 def whoami(verbose=False, veryverbose=False):
     import machine
@@ -168,6 +162,7 @@ def pretty_reset_cause():
     elif mrc == machine.DEEPSLEEP_RESET:
         print("DEEPSLEEP_RESET")
         # machine.deepsleep()
+        # pysense2 in gpy - power on from otii
     elif mrc == machine.SOFT_RESET:
         print("SOFT_RESET")
         # Ctrl-D
@@ -180,6 +175,7 @@ def pretty_wake_reason():
     if mwr[0] == machine.PWRON_WAKE:
         print("PWRON_WAKE")
         # reset button
+        # pysense2 w gpy - wake from picsleep via mclr button
     elif mwr[0] == machine.PIN_WAKE:
         print("PIN_WAKE")
     elif mwr[0] == machine.RTC_WAKE:
@@ -213,7 +209,7 @@ if __name__ == "__main__":
     print(os.uname().sysname.lower() + '-' + binascii.hexlify(machine.unique_id()).decode("utf-8")[-4:], "blink.py")
     import _thread
     _thread.start_new_thread(blink, () )
-    time.sleep(0.01)
+    time.sleep(0.1)
     whoami(True, True)
     if False:
         blink()
