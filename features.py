@@ -46,15 +46,25 @@ if __name__ == '__main__':
     if False:
         features(True) # turn everything on
         features(False) # turn everything off
+        # print
         print(pycom.heartbeat_on_boot())
         print(pycom.lte_modem_en_on_boot())
         print(pycom.pybytes_on_boot())
         print(pycom.smart_config_on_boot())
         print(pycom.wdt_on_boot())
         print(pycom.wifi_on_boot())
+        # off
         pycom.heartbeat_on_boot(False)
+        import pycom
         pycom.lte_modem_en_on_boot(False)
-        pycom.pybytes_on_boot(False)
-        pycom.smart_config_on_boot(False)
         pycom.wdt_on_boot(False)
         pycom.wifi_on_boot(False)
+        pycom.smart_config_on_boot(False)
+        pycom.pybytes_on_boot(False)
+        # on
+        pycom.heartbeat_on_boot(True)
+        pycom.lte_modem_en_on_boot(True)
+        pycom.pybytes_on_boot(True)
+        pycom.smart_config_on_boot(True)
+        pycom.wdt_on_boot(True)
+        pycom.wifi_on_boot(True)
