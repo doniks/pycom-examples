@@ -1,12 +1,22 @@
 from machine import I2C
 import time
 
+# known
+addr = {
+  0x08: 'PIC',
+  0x10: 'GPS',
+  30: 'ACC',
+}
+
 def scan():
     s = i2c.scan()
-    print("i2c:", end='')
+    print("i2c:")
     for i in s:
-        print(hex(i), end=', ')
-    print()
+        if i in addr:
+            print('  0x{:02x}: {}'.format(i,addr[i]))
+        else:
+            print('  0x{:02x}'.format(i))
+
 # print(i2c.scan())
 # while True:
 #     print(i2c.scan())
@@ -27,3 +37,4 @@ i2c = I2C(2, mode=I2C.MASTER, pins=(sda, scl)) # , baudrate=100000)
 # i2c = I2C()
 # i2c = I2C(pins=(sda, scl), baudrate=400000 )
 scan()
+print('done')
