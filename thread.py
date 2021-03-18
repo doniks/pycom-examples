@@ -29,6 +29,13 @@ def mem():
     internal_heap_free = pycom.get_free_heap()[0]
     external_heap_free = pycom.get_free_heap()[1]
 
+def doit(id, ct, level):
+    print(id, ct, level, micropython.stack_use())
+    if level > 10:
+        return
+    else:
+        doit(id, ct, level+1)
+    time.sleep(0.5)
 
 
 def th_func(delay, id):
@@ -38,7 +45,8 @@ def th_func(delay, id):
     ct = 0
     while keep_going:
         time.sleep(delay)
-        print('id=%d\t ct=%d' % (id, ct) )
+        # print('id=%d\t ct=%d st=%d' % (id, ct, micropython.stack_use()) )
+        doit(id, ct, 0)
         ct += 1
     print('id=%d\t ct=%d --- end' % (id, ct) )
 
@@ -46,7 +54,8 @@ def th_func(delay, id):
 # create threads with increasing delays
 def thread_test():
     mem()
-    n = 24
+    # n = 24
+    n = 2
     # GPy base core dumps at 25 in safe boot mode
     # , or 21?
     print("Starting %d threads...." %(n))
@@ -55,7 +64,7 @@ def thread_test():
         print(i)
         time.sleep(0.2)
         #achine.info()
-        mem()
+        # mem()
 
     if False:
         keep_going = False
@@ -63,11 +72,16 @@ def thread_test():
 if __name__ == "__main__":
     # machine.info()
     print("start")
+    _thread.stack_size(4 * 1024)
     try:
         thread_test()
+        # while True:
+        #     pass
     except Exception as e:
         print("Exception during thread_test:", e)
     print("sleep")
-    time.sleep(5)
+    for i in range(5):
+        print("main stack_use=", micropython.stack_use())
+        time.sleep(5)
     print("end")
     keep_going = False
