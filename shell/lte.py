@@ -255,6 +255,7 @@ def lte_init(use_psm=use_psm):
         return lte_init_psm_off()
 
 def at(cmd='', verbose=False, quiet=True, do_return=False, raise_on_error=True):
+    global l
     if l is None:
         lte_init()
     if cmd == '':
@@ -440,11 +441,12 @@ def cereg(n=None):
                 ci = v[3].strip('"')
                 act = v[4]
                 print('  tac=', tac, ' ci=', ci, ' act=', act, sep='')
+            return (n,s)
         except:
-            pass
+            return None
     else:
         at('AT+CEREG='+str(n))
-        cereg()
+        return cereg()
 
 def psm():
     if not l:
@@ -619,7 +621,6 @@ def showphy(do_return=False):
         return at('AT!="showphy"', do_return=do_return)
     else:
         at('AT!="showphy"')
-
 
 def stat_log():
     if l is None:
@@ -1015,7 +1016,7 @@ def lte_isattached():
     print('isattached', r)
     return r
 
-def lte_waitattached(timeout_s = attach_timeout_s, do_fsm_log=True, do_rssi_log=True):
+def lte_waitattached(timeout_s = attach_timeout_s, do_fsm_log=True, do_rssi_log=True, sleep_time_s=0.1):
     if timeout_s is not None:
         timeout_ms = timeout_s * 1000
     t = time.ticks_ms()
@@ -1045,7 +1046,7 @@ def lte_waitattached(timeout_s = attach_timeout_s, do_fsm_log=True, do_rssi_log=
                     r = r2
                     print(time.time(), r)
                     # rssi()
-            time.sleep(0.1)
+            time.sleep(sleep_time_s)
             if timeout_s is not None and time.ticks_ms() - t > timeout_ms:
                 raise Exception("Could not attach in {} s".format(timeout_s))
         print("isattached", l.isattached(), "turned true after {} s".format(( time.ticks_ms()-t )  / 1000 ))
@@ -1391,22 +1392,40 @@ if __name__ == "__main__":
     #     print('new')
     # else:
     #     print('dunno')
+    try:
+        fw = os.uname().release
+        if fw_requires_cereg_2(fw):
+            print("FW", fw, "requires cereg 2")
+            c = cereg()[0]
+            if c == 2:
+                print("ok", c)
+            else:
+                print("TODO: UPDATE CEREG SETTING!", c)
+                sys.exit()
+        else:
+            print("FW", fw, "requires cereg 1, and configures this automatically")
+            cereg()
+            # c = cereg()[0]
+            # print("cereg=FW", c)
+    except Exception as e:
+        print("FW version test Exception:", e)
 
     if False:
-        lte_attach()
-    elif True:
+        lte_attach(band=8)
+    elif False:
         print("cfun", cfun())
         cereg()
         lte_version()
         lpmc()
         cfg = provider()
-        bands()
-        # print("attach")
-        # l.attach(band=20)
+        # bands()
+        print("attach")
+        l.attach(band=8)
         # l.attach(band=cfg[1])
-        # l.init(debug=False)
+        l.init(debug=False)
         # diff_log(moni, do_return=True)
-        # lte_waitattached()
+        lte_waitattached(timeout_s=None, sleep_time_s=5)
+        # diff_log(showphy, do_return=True)
     elif False:
         print("attach manual")
         lte_attach_manual(band=20)
