@@ -1,4 +1,4 @@
-import ubinascii
+import binascii
 import machine
 import os
 
@@ -21,6 +21,12 @@ def str_to_bytes(s):
 def bytes_to_str(b):
     return b.decode('utf-8')
 
+def int_to_bitstring(i):
+    return bin(i)
+
+def hexstring_to_int(h):
+    return int(h, 16)
+
 
 # An easy way that I was able to do a variable length when packing a string is:
 # pack('{}s'.format(len(string)), string)
@@ -35,10 +41,13 @@ if __name__ == "__main__":
     # print(b[0])
     # print(ubinascii.hexlify(b))
     for i in range(0, len(b)):
-        print(ubinascii.hexlify(b[i:i+1]), end=" ")
+        print(binascii.hexlify(b[i:i+1]), end=" ")
     print()
 
     b = os.urandom(3)
     #i = int.from_bytes(b, "big")
     i = bytes_to_int(b)
     print("bytes to int:", binascii.hexlify(b), "->", hex(i), "=", i)
+
+    b = b'\x13'
+    print(b, "->", int_to_bitstring(bytes_to_int(b)))

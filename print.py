@@ -1,11 +1,18 @@
 hex_string_prefixed = "\xde\xad\xbe\xef"
+print(type(hex_string_prefixed), len(hex_string_prefixed))
 print(" ".join(hex(ord(n)) for n in hex_string_prefixed))
 # 0xde 0xad 0xbe 0xef
 
 hex_bytes = b'\xde\xad\xbe\xef'
+print(type(hex_bytes), len(hex_bytes))
+print(" ".join(hex(n) for n in hex_bytes))
+
+hex_bytes = b'deadbeef'
+print(type(hex_bytes), len(hex_bytes))
 print(" ".join(hex(n) for n in hex_bytes))
 
 hex_string = "deadbeef"
+print(type(hex_string), len(hex_string))
 print(hex(int(hex_string, 16)))
 # 0xdeadbeef
 

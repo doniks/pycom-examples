@@ -2,6 +2,7 @@ import machine
 rng_max = 0xffffff
 
 # FYI: there is also os.urandom() which gives pseudo random numbers
+
 def prand():
     return machine.rng() / rng_max
 
