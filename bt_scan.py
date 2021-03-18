@@ -1,6 +1,6 @@
 from network import Bluetooth
 import time
-import binascii
+from binascii import hexlify
 import machine
 
 # Address type
@@ -103,11 +103,16 @@ def bt_event_cb(bt_o):
         print("XX[", hex(events), "]", sep='', end=' ')
     #print()
 
+def twoscmp(value):
+    if value > 128:
+        value = value - 256
+    return value
+
 def print_adv(adv):
     #print("mac", mac, adv)
     s=";"
     # s=" "
-    print(binascii.hexlify(adv.mac), end=s)
+    print(hexlify(adv.mac), end=s)
     print(adv.rssi, end=s)
     if adv.addr_type in AT:
         print(AT[adv.addr_type], end=s)
@@ -119,17 +124,49 @@ def print_adv(adv):
         print("{:<8}".format(ADT[adv.adv_type]), end=s)
     else:
         print(adv.adv_type, end=s)
-    #print(adv.data) # binascii.hexlify(strip(adv.data)))
+    name = bt.resolve_adv_data(adv.data, Bluetooth.ADV_NAME_CMPL)
+    if name:
+        print(name, end=s)
+    else:
+        name = bt.resolve_adv_data(adv.data, Bluetooth.ADV_NAME_SHORT)
+        if name:
+            print(name, end=s)
+        else:
+            print(end=s)
+    #print(adv.data) # hexlify(strip(adv.data)))
     for addt in ADDTL:
         rd = bt.resolve_adv_data(adv.data, addt)
         if rd:
-            if type(rd) == bytes:
-                # print(ADDT[addt], "=", binascii.hexlify(rd), sep="", end=s)
-                print(binascii.hexlify(rd), sep="", end=s)
+            if addt == Bluetooth.ADV_FLAG:
+                print('{:08b}'.format(rd), end=s)
+            elif type(rd) == bytes:
+                # print(ADDT[addt], "=", hexlify(rd), sep="", end=s)
+                print(hexlify(rd), sep="", end=s)
             else:
                 # print(ADDT[addt], "=", rd, sep="", end=s)
                 print(rd, sep="", end=s)
         else:
+            print(end=s)
+    manuf_data = bt.resolve_adv_data(adv.data, Bluetooth.ADV_MANUFACTURER_DATA)
+    if manuf_data:
+        # try decoding according to iBeacon encoding
+        manuf4 = hexlify(manuf_data[0:4])
+        uuid = hexlify(manuf_data[4:20])
+        major = hexlify(manuf_data[20:22])
+        minor = hexlify(manuf_data[22:24])
+        tx_power = hexlify(manuf_data[24:25])
+        print(len(manuf_data), manuf4, uuid, major, minor, tx_power, sep=s, end=s)
+        try:
+            print(int(major, 16), end=s)
+        except:
+            print(end=s)
+        try:
+            print(int(minor, 16), end=s)
+        except:
+            print(end=s)
+        try:
+            print(twoscmp(int(tx_power, 16)), end=s)
+        except:
             print(end=s)
     print()
 
@@ -140,7 +177,7 @@ def process_adv():
     if adv:
         total_adv_ct += 1
         t = time.ticks_ms() / 1000
-        mac = binascii.hexlify(adv.mac)
+        mac = hexlify(adv.mac)
         if mac in Periods:
             # we've seen mac before
             if t - Periods[mac][-1][1] < track_timeout_s:
@@ -197,7 +234,7 @@ print("scanning stopped")
 if False:
     # print tracking results, ie periods of visibility per device
     for k in Periods:
-        print(binascii.hexlify(k), end=":")
+        print(hexlify(k), end=":")
         last_end = None
         for period in Periods[k]:
             if last_end is not None:
@@ -207,9 +244,10 @@ if False:
         print()
 else:
     # print scanning results, ie, advertisment details per device
-    print("mac;rssi;AT;ADT;", end='')
+    print("mac;rssi;AT;ADT;Name;", end='')
     for addt in ADDTL:
         print(ADDT[addt], end=';')
+    print('len;manuf4?;uuid;major;minor;tx_pwr;major;minor;tx_pwr')
     print()
 
     # for a in Adv:
