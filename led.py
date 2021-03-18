@@ -1,7 +1,7 @@
 from machine import Pin
 import time
 
-# works on GPy
+# works on GPy, Fipy, Wipy
 
 led = Pin('P9', mode=Pin.OUT) # G 16
 led_off = 1
