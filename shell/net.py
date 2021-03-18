@@ -181,9 +181,9 @@ def http_get(url=None, kb=None, verbose=False, quiet=False, timeout_s=10, do_pri
     dur_recv_s = dur_recv_ms / 1000
     if not quiet:
         if success:
-            print("http_get succeeded:", end="")
+            print("http_get({}) succeeded:".format(host), end="")
         else:
-            print("http_get failed:", end="")
+            print("http_get({}) failed:".format(host), end="")
         print(len_recv, "bytes received in", dur_recv_s, "s ->", bps_recv, "bps")
     retval = (success, dur_send_s, dur_recv_s, dur_total_s, len_recv, bps_send, bps_recv)
     # print("succ={} dur={} bps={}".format(retval[0], retval[3], retval[6]) )
@@ -240,10 +240,18 @@ def dns_test(index=None, attempts=3):
 if __name__ == "__main__":
     import binascii
     import machine
-    print(os.uname().sysname, binascii.hexlify(machine.unique_id()), "net.py")
+    print(os.uname().sysname.lower() + '-' + binascii.hexlify(machine.unique_id()).decode("utf-8")[-4:], "net.py")
+
+    http_get('http://192.168.4.1/index.html', timeout_s=1, verbose=True)
+    import sys
+    sys.exit()
+    http_gets('http://192.168.4.1/index.html', 5)
+
+
     dns('www.pycom.io', raise_on_error=False)
     dns('pybytes.pycom.io', raise_on_error=False)
     # dns_test(attempts=100)
+    rtc_ntp_sync(1)
     print(time.time())
     pretty_gmt()
     pretty_local()
@@ -263,6 +271,14 @@ if __name__ == "__main__":
         t /= 365
         print("y", int(t))
 
+    # http_get('http://ftp.snt.utwente.nl/pub/docs/rfc/rfc753.html', timeout_s=1, verbose=True)  #  100 KiB
+    if False:
+        print('################ START')
+        http_get('http://ftp.snt.utwente.nl/pub/docs/rfc/rfc753.html', timeout_s=1, verbose=False)  #  100 KiB
+        # http_get('http://www.faqs.org/rfcs/rfc753.html')
+        print('################ END')
+        http_get('http://ftp.snt.utwente.nl/pub/test/1M', verbose=True)
+
     if False:
         http_get()
         http_get(kb=10)
@@ -273,8 +289,8 @@ if __name__ == "__main__":
         http_get.http_gets('http://ftp.snt.utwente.nl/pub/docs/rfc/rfc1535.html') #   10 KiB
         http_get('http://ftp.snt.utwente.nl/pub/docs/rfc/rfc753.html')  #  100 KiB
         http_get('http://ftp.snt.utwente.nl/pub/test/1M')               #  977 KiB
-        http_get('http://ftp.snt.utwente.nl/pub/test/100M')
         http_get.http_gets('http://ftp.snt.utwente.nl/pub/test/10M')
+        http_get('http://ftp.snt.utwente.nl/pub/test/100M')
         http_get.http_gets("http://10.0.103.1/pycom-fwtool-1.16.1-bionic-amd64.deb") # peters laptop in the office
         http_get.http_gets("http://192.168.178.81/pycom-fwtool-1.16.1-bionic-amd64.deb") # peters laptop at home via wifi
         # laptop when directly connected to the PyEthernet
