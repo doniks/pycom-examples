@@ -11,6 +11,19 @@ import os
 # implement wildcards
 # fix/implement find(/flash/foo*/bar.*', do_return=True) and cat(find('thingy.txt', do_return=True)) mv(find('*.py'), '/flash/backup/')
 
+def _spin(ct, ms=0):
+    if ct == 0:
+        print('-', end='')
+        return
+    x = ct % 3
+    if x == 0:
+        print('\b\\', end='')
+    elif x == 1:
+        print('\b/', end='')
+    elif x == 2:
+        print('\b-', end='')
+    time.sleep_ms(ms)
+
 # add a trailing /
 def _add_slash(dir):
     if dir[-1] == '/':
@@ -483,6 +496,26 @@ def _test():
     # mkdir('/flash/stuff') and mkdir('/flash/stuff')
     # rm('/flash/main.py')
 
+def _stress():
+    s = "All work and no play makes Jack a dull boy" * 10
+    d = '/flash/stress'
+    try:
+        mkdir(d)
+    except:
+        pass
+    if False:
+        print(os.listdir('/flash/stress'))
+    ct = 0
+    while True:
+        f = d + '/jack{:05}.txt'.format(ct)
+        print(ct)
+        for x in range(1):
+            tee(s, f, True)
+            _spin(x)
+        print('\b', end='')
+        print(ct, os.getfree('/flash'), len(os.listdir(d)))
+        ct += 1
+
 if __name__ == "__main__":
     ls()
     ll()
@@ -508,8 +541,14 @@ if __name__ == "__main__":
         asdf
         jkl''')
     if False:
+        _stress()
+    try:
         mount_sd()
         find('/sd')
+        import sqnsupgrade
+    except:
+        pass
+    if False:
         ls('/sd/CATM1-41065')
         ls('/sd/NB1-41019')
         import sqnsupgrade
@@ -518,11 +557,15 @@ if __name__ == "__main__":
         sqnsupgrade.run('/sd/CATM1-41065/CATM1-41065.dup', debug=True)
         sqnsupgrade.run('/sd/CATM1-41065/CATM1-41065.dup', '/sd/CATM1-41065/updater.elf', debug=True)
         sqnsupgrade.run('/sd/NB1-41019/NB1-41019.dup', debug=True)
+        # delta
+        # tbd
         # CAT-M1
-        sqnsupgrade.run('/sd/LR5.2.1.0-48829-2.dup', load_fff=False, debug=True)
-        sqnsupgrade.run('/sd/LR5.2.1.0-48829-2.dup', debug=True)
+        sqnsupgrade.run('/sd/LR5.2.1.0-48829/LR5.2.1.0-48829-1.dup', load_fff=False, debug=True)
+        sqnsupgrade.run('/sd/LR5.2.1.0-48829/LR5.2.1.0-48829-2.dup', debug=True)
         # NB-IoT
         sqnsupgrade.run('/sd/NB1-46262/NB1-46262.dup', debug=True)
+        sqnsupgrade.run('/sd/NB1-46262/FIPY_LR6.1.2.0-46262_SMDD.dup', debug=True)
+        sqnsupgrade.run('/sd/FIPY_LR6.1.2.0-46262_SMDD.dup', debug=True)
         sqnsupgrade.run('/sd/NB1-48939/NB1-48939.dup', debug=True)
         machine.reset()
         #_wildcard('/sd/CAT*/mtool*')
