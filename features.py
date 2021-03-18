@@ -38,21 +38,22 @@ def features(on=None):
 if __name__ == '__main__':
     import binascii
     import machine
-    uid = binascii.hexlify(machine.unique_id())
-    name = os.uname().sysname.lower() + '-' + uid.decode("utf-8")[-4:]
-    print(name)
+    uid = binascii.hexlify(machine.unique_id()).decode("utf-8")
+    name = os.uname().sysname.lower() + '-' + uid[-4:]
+    print(name, uid)
 
     features()
     if False:
         features(True) # turn everything on
         features(False) # turn everything off
         # print
-        print(pycom.heartbeat_on_boot())
-        print(pycom.lte_modem_en_on_boot())
-        print(pycom.pybytes_on_boot())
-        print(pycom.smart_config_on_boot())
-        print(pycom.wdt_on_boot())
-        print(pycom.wifi_on_boot())
+        import pycom
+        print('heartbeat', pycom.heartbeat_on_boot())
+        print('lte', pycom.lte_modem_en_on_boot())
+        print('pybytes', pycom.pybytes_on_boot())
+        print('smart_config', pycom.smart_config_on_boot())
+        print('wdt', pycom.wdt_on_boot())
+        print('wifi', pycom.wifi_on_boot())
         # off
         pycom.heartbeat_on_boot(False)
         import pycom
