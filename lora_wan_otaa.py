@@ -57,7 +57,7 @@ lora.join(activation=LoRa.OTAA, auth=(c["app_eui"], c["app_key"]), timeout=0)
 # wait until the module has joined the network
 start_join = time.time()
 while not lora.has_joined():
-    time.sleep(1)
+    time.sleep(2.5)
     print('.', end="")
 print('Joined after', time.time() - start_join)
 
@@ -68,7 +68,8 @@ s = socket.socket(socket.AF_LORA, socket.SOCK_RAW)
 s.setsockopt(socket.SOL_LORA, socket.SO_DR, 5)
 
 
-packets_to_send = 3
+packets_to_send = 10
+sleep_between_pkts = 30
 n = 0
 while n < packets_to_send:
     # make the socket blocking
@@ -86,5 +87,10 @@ while n < packets_to_send:
     if data:
         print("received:", binascii.hexlify(data))
 
-    time.sleep(5)
     n += 1
+    if n < packets_to_send:
+        time.sleep(sleep_between_pkts)
+
+deepsleep_s = 1800
+print("deepsleep", deepsleep_s, "s")
+machine.deepsleep(deepsleep_s * 1000)
