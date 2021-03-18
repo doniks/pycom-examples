@@ -35,7 +35,20 @@ color_orange     = (color_red | int(intensity * 0.7)<<8 )
 # def_color=0x090009 # night
 def_color=color_purple
 
-def blink(repetitions=10, color=def_color, on_ms=100, off_ms=100 ):
+def spin(ct, ms=100):
+    if ct == 0:
+        print('-', end='')
+        return
+    x = ct % 3
+    if x == 0:
+        print('\b\\', end='')
+    elif x == 1:
+        print('\b/', end='')
+    elif x == 2:
+        print('\b-', end='')
+    time.sleep_ms(ms)
+
+def blink(repetitions=10, color=def_color, on_ms=100, off_ms=100, do_spin=False):
     # print(repetitions, hex(color), on_ms, off_ms)
     hb = pycom.heartbeat()
     if hb:
@@ -51,6 +64,8 @@ def blink(repetitions=10, color=def_color, on_ms=100, off_ms=100 ):
         else:
             # keep blinking forever, but count them
             ct += 1
+        if do_spin:
+            spin(ct,ms=0)
         pycom.rgbled(color)
         time.sleep_ms(on_ms)
         pycom.rgbled(0x000000)
@@ -184,6 +199,7 @@ def pretty_wake_reason():
     elif mwr[0] == machine.ULP_WAKE:
         print("ULP_WAKE")
 
+
 # on an Exp 3.1
 # plugin                        PWRON_RESET, PWRON_WAKE
 # reset button                  PWRON_RESET, PWRON_WAKE
@@ -208,11 +224,14 @@ if __name__ == "__main__":
     import machine
     print(os.uname().sysname.lower() + '-' + binascii.hexlify(machine.unique_id()).decode("utf-8")[-4:], "blink.py")
     import _thread
-    _thread.start_new_thread(blink, () )
-    time.sleep(0.1)
-    whoami(True, True)
+    blink()
+    # _thread.start_new_thread(blink, () )
+    # time.sleep(0.1)
+    # whoami(True, True)
     if False:
-        blink()
+        pretty_reset_cause()
+        pretty_wake_reason()
+        blink(3, 0x333300, 500, 100)
         shimmer()
         print(color2rgb(0xaabbcc))
         print(hex(rgb2color(0x5, 0xa, 0xff)))
@@ -221,15 +240,10 @@ if __name__ == "__main__":
         for i in range(3):
             fade(0x1a2b3c)
             fade(0)
-
-    # pycom.rgbled(color_orange)
-
-    # blink(repetitions=0, on_ms=1500, off_ms=500)
-    # 0xffff00 # yellow
-    # blink(3, 0x333300, 500, 100)
-    #blink(10, 0x330033, 500)
-    # print(os.uname())
-    # pretty_reset_cause()
-    # pretty_wake_reason()
-    # whoami(False, True)
-    # blink(10, color_orange)
+        print("spin")
+        for x in range(20):
+            spin(x)
+        print("\bspun")
+    if False:
+        # slow yellow blink with spin forever
+        blink(0, 0x111100, on_ms=1000, off_ms=100, do_spin=True)
