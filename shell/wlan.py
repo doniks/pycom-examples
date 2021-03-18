@@ -20,7 +20,7 @@ def wlan_init():
         #print('already initialized')
         return w
     print("Initialise WiFi")
-    w = WLAN() # antenna=WLAN.EXT_ANT)
+    w = WLAN() #antenna=WLAN.EXT_ANT)
     try:
         w.hostname(binascii.hexlify(machine.unique_id()) + "." + os.uname().sysname + "." + "w")
         # hostname is not available in 1.18.2
@@ -35,7 +35,10 @@ def wlan_init():
     # original_auth = w.auth()
     return w
 
-def wlan_waitconnected(timeout_s = 20):
+def wlan_isconnected():
+    return w.isconnected()
+
+def wlan_waitconnected(timeout_s):
     if w is None:
         print("wlan not initialized")
         return False
@@ -95,7 +98,7 @@ def wlan_quick(net = ''):
         w.connect(net, ( sec, pwd ) )
         return wlan_waitconnected(timeout_s=10)
 
-def wlan_connect():
+def wlan_connect(timeout_s = 20):
     global connection, IP, w
     wlan_init()
 
@@ -129,7 +132,7 @@ def wlan_connect():
                 w.ifconfig(config=net_properties['wlan_config'])
             #print("connect", net_to_use, sec) # , pwd)
             w.connect(net_to_use, (sec, pwd))
-            return wlan_waitconnected()
+            return wlan_waitconnected(timeout_s)
 
         except Exception as e:
             print("Error while trying to connect to Wlan:", e)
