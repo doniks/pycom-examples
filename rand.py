@@ -3,12 +3,12 @@ rng_max = 0xffffff
 
 # FYI: there is also os.urandom() which gives pseudo random numbers
 
-def prand():
-    return machine.rng() / rng_max
-
-def prandi(low, high):
-    delta = high - low
-    return int(low + rand()*delta)
+# def prand():
+#     return machine.rng() / rng_max
+#
+# def prandi(low, high):
+#     delta = high - low
+#     return int(low + rand()*delta)
 
 def rng():
     r0 = machine.rng()
@@ -107,7 +107,8 @@ def rand_test(low=4, high=9, num=10000):
     print()
 
 if __name__ == "__main__":
+    print(rand(), randi(1,180))
     # for i in range(0,10):
     #     r = rngboot()
     #     print(r, hex(r))
-    rand_test()
+    # rand_test()
