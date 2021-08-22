@@ -5,17 +5,20 @@ import time
 addr = {
   0x08: 'PIC',
   0x10: 'GPS',
-  30: 'ACC',
+  0x1e: 'LIS2HH12 (ACC)',
+  0x60: 'MPL3115A2',
+  0x29: 'LTR329ALS01',
+  0x40: 'SI7006A20',
 }
 
 def scan():
     s = i2c.scan()
-    print("i2c:")
+    print("i2c[{}]:".format(len(s)))
     for i in s:
         if i in addr:
-            print('  0x{:02x}: {}'.format(i,addr[i]))
+            print('  0x{:02x} /{:3d}: {}'.format(i,i,addr[i]))
         else:
-            print('  0x{:02x}'.format(i))
+            print('  0x{:02x} /{:3d}'.format(i, i))
 
 # print(i2c.scan())
 # while True:
@@ -37,4 +40,4 @@ i2c = I2C(2, mode=I2C.MASTER, pins=(sda, scl)) # , baudrate=100000)
 # i2c = I2C()
 # i2c = I2C(pins=(sda, scl), baudrate=400000 )
 scan()
-print('done')
+# print('done')
