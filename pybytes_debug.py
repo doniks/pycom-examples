@@ -32,6 +32,7 @@ def toggle():
         dbg(99)
 
 if __name__ == '__main__':
+    print(dbg())
     # toggle()
     if False:
         pycom.nvs_set(key, 99) # 1,2,3,4,5,6, 99

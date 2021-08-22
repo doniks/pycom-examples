@@ -10,3 +10,6 @@ else:
 
 if False:
     machine.reset()
+
+    import _thread
+    _thread.start_new_thread(pybytes.start,)
