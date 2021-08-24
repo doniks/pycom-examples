@@ -1,7 +1,7 @@
 import binascii
 def hexdump(file=None, buf=None, print_ascii=True, print_bin=False, head=None):
     if file is not None:
-        f = open(filename, 'r')
+        f = open(file, 'r')
         buf = f.read()
         f.close()
     ct = 0
@@ -63,6 +63,6 @@ if __name__ == "__main__":
     # hexdump("/flash/test/test.bin.up")
     # hexdump("/flash/test/http_get.recv")
     # hexdump("/flash/up41065.elf", head=2000)
-    # hexdump(buf='ever\r\n')
+    hexdump(buf='ever\r\n')
     # hexdump(buf=b'1234ff')
-    hexdump(buf=buf,print_bin=True, print_ascii=False)
+    # hexdump(buf=buf,print_bin=True, print_ascii=False)

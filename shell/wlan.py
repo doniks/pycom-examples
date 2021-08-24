@@ -7,20 +7,58 @@ import binascii
 
 known_nets_dict = {
     # 'ssid2': {'pwd': 'password2', 'wlan_config':  ('10.0.0.114', '255.255.0.0', '10.0.0.1', '10.0.0.1')}, # (ip, subnet_mask, gateway, DNS_server)
-    'openwireless.org': {'pwd': '', 'sec': 0},
+    # 'openwireless.org' : {'pwd': '', 'sec': 0},
+    'Pycom'            : {'pwd': 'PyE!ndh0ven#', 'sec': WLAN.WPA2},
+    # 'keller'           : {'pwd': 'fritzL.ooknur1noe'},
+    'AndroidAP_1337'   : {'pwd': 'rechuyip'},
+    # 'dfdfdfd-2054'     : {'pwd': '', 'sec': None},
+    # 'wipy-wlan-349c'   : {'pwd': 'www.pycom.io', 'sec': None}
 }
 
-w = None
+# w = None
 connection = ""
 IP = ""
 
-def wlan_init():
+ant_name = {
+    WLAN.EXT_ANT : 'EXT',
+    WLAN.INT_ANT : 'INT',
+    # WLAN.MAN_ANT : 'MAN',
+    2            : 'MAN',
+}
+
+mode_name = {
+    WLAN.STA    : 'STA',
+    WLAN.STA_AP : 'STA_AP',
+    WLAN.AP     : 'AP',
+}
+
+bw_name = dict()
+try:
+    bw_name = {
+        WLAN.HT20 : '20MHz',
+        WLAN.HT40 : '40MHz',
+    }
+except:
+    # fw 1.18
+    pass
+
+def wlan_init(antenna=None):
     global w
-    if w is not None:
-        #print('already initialized')
-        return w
-    print("Initialise WiFi")
-    w = WLAN() #antenna=WLAN.EXT_ANT)
+    try:
+        if w is not None:
+            # print('already initialized')
+            if antenna is not None and w.antenna() != antenna:
+                print('set antenna', antenna)
+                w.antenna(antenna)
+            return w
+    except:
+        pass
+    if antenna is None:
+        print("Initialise WiFi")
+        w = WLAN()
+    else:
+        print("Initialise WiFi", ant_name[antenna])
+        w = WLAN(antenna=antenna)
     try:
         w.hostname(binascii.hexlify(machine.unique_id()) + "." + os.uname().sysname + "." + "w")
         # hostname is not available in 1.18.2
@@ -28,12 +66,14 @@ def wlan_init():
         pass
     # print("ap_mac", binascii.hexlify(w.mac().ap_mac))
     # print("sta_mac", binascii.hexlify(w.mac().sta_mac))
-    if ( w.mode() == WLAN.AP ):
-        print("switch from AP to STA_AP")
-        w.mode(WLAN.STA_AP)
     # original_ssid = w.ssid()
     # original_auth = w.auth()
     return w
+
+def wlan_add_sta():
+    if ( w.mode() == WLAN.AP ):
+        print("switch from AP to STA_AP")
+        w.mode(WLAN.STA_AP)
 
 def wlan_isconnected():
     return w.isconnected()
@@ -88,6 +128,7 @@ def wlan_quick(net = ''):
         return wlan_quick('Pycom') or wlan_connect()
     else:
         # perform a quick connect, ie no scan
+        wlan_add_sta()
         if w.isconnected():
             print('already connected ({})'.format(w.ssid()))
             return True
@@ -98,9 +139,37 @@ def wlan_quick(net = ''):
         w.connect(net, ( sec, pwd ) )
         return wlan_waitconnected(timeout_s=10)
 
-def wlan_connect(timeout_s = 20):
+def wlan_scan(verbose=True, antenna=None):
+    wlan_init(antenna)
+    wlan_add_sta()
+    verbose and print('scan', end='')
+    nets = w.scan()
+    verbose and print("[{}]".format(len(nets)))
+
+    min_rssi =  1000
+    max_rssi = -1000
+    for net in nets:
+        # verbose and print('    {:25s} ({:4d}) {:2d} {:3d}'.format(net.ssid, net.rssi, net.channel, net.sec), ':', net)
+        if net.rssi < min_rssi:
+            min_rssi = net.rssi
+        if net.rssi > max_rssi:
+            max_rssi = net.rssi
+    verbose and print('rssi range = [{},{}]'.format(min_rssi, max_rssi))
+    print('ant={} mode={} bw={} ch={} pwr={} scan[{}] rssi=[{},{}]'.format(ant_name[w.antenna()], mode_name[w.mode()], bw_name[w.bandwidth()], w.channel(), w.max_tx_power(), len(nets), min_rssi, max_rssi))
+
+    if verbose:
+        nets_sorted = sorted(nets, key=lambda x: x.rssi)
+        # print('sorted')
+        print('    {:25s} ({:4s}) {:2s} {:3s}'.format('SSID', 'RSSI', 'CH', 'SEC'))
+        for net in nets:
+            print('    {:25s} ({:4d}) {:2d} {:3d}'.format(net.ssid, net.rssi, net.channel, net.sec), ':', net)
+
+    return len(nets)
+
+def wlan_connect(timeout_s = 20, antenna=None):
     global connection, IP, w
-    wlan_init()
+    wlan_init(antenna=antenna)
+    wlan_add_sta()
 
     if w.isconnected():
         print("currently connected ... disconnecting")
@@ -153,17 +222,107 @@ def wlan_ifconfig():
     return c
 
 def wlan_deinit():
+    global w
     w.deinit()
+    w = None
+
+def wlan_info():
+    # print('i')
+    w = wlan_init()
+    # print('d')
+    def p(*m):
+        print(*m, end='')
+
+    p('mode={} '.format(mode_name[w.mode()]))
+    try:
+        p('hostname={} '.format(w.hostname()))
+    except:
+        pass
+    p('conn={} '.format(w.isconnected()))
+    # p('ant({})={} '.format(ant_name[w.antenna()]))
+    p('ant={} '.format(ant_name[w.antenna()]))
+    try:
+        p('bw={} '.format(bw_name[w.bandwidth()]))
+    except:
+        pass
+    p('ch={} '.format(w.channel()))
+    try:
+        p('TXPWR={} '.format(w.max_tx_power()))
+    except:
+        p('TXPWR=(fail)')
+    try:
+        p('country={} '.format(w.country()))
+    except:
+        pass
+
+    p('protocol=')
+    try:
+        p('{} '.format(w.wifi_protocol()))
+    except Exception as e:
+        p('({}) '.format(e))
+
+    p('ifconfig=')
+    try:
+        p(w.ifconfig(), '')
+    except Exception as e:
+        p(e, '')
+    p('auth={} '.format(w.auth()))
+    p('ssid={} '.format(w.ssid()))
+    p('mac={} bssid={} '.format(w.mac(), w.bssid()))
+
+    try:
+        p('AP={} '.format(w.joined_ap_info()))
+        if False:
+            p('PW={} '.format(w.Connected_ap_pwd()))
+    except:
+        pass
+
+    try:
+        stations = w.ap_sta_list()
+        p('ap_sta_list[{}] '.format(len(stations)))
+        print()
+        for sta in stations:
+            print(sta)
+    except:
+        print()
+
 
 if __name__ == "__main__":
     import binascii
     import os
     uid = binascii.hexlify(machine.unique_id())
     name = os.uname().sysname.lower() + '-' + uid.decode("utf-8")[-4:]
-    print(os.uname().sysname, uid, name, "main.py")
+    print(os.uname().sysname, uid, name, "wlan.py")
     print("sys", os.uname().sysname)
     print("unique_id", binascii.hexlify(machine.unique_id()))
-    wlan_connect()
+    wlan_info()
+    # wlan_scan(False)
+    # wlan_scan(False, WLAN.MAN_ANT)
+    # wlan_scan(False, WLAN.EXT_ANT)
+    # wlan_scan(False, WLAN.MAN_ANT)
+    # wlan_scan(False, WLAN.INT_ANT)
+    # wlan_scan(False, WLAN.MAN_ANT)
+
+    import sys
+    sys.exit()
+    # ants = [WLAN.MAN_ANT, WLAN.INT_ANT, WLAN.EXT_ANT]
+    # ants = [WLAN.EXT_ANT]
+    ants = [WLAN.INT_ANT]
+
+    for a in ants:
+        wlan_init(antenna=a)
+        ct = 0
+        S = 10
+        for s in range(S):
+            try:
+                ct += wlan_scan(False)
+            except Exception as e:
+                print(e)
+        print(ant_name[a], ct, ct/S)
+        wlan_deinit()
+        time.sleep(10)
+
+    # wlan_connect()
     if False:
         wlan_quick()
         machine.reset()

@@ -27,5 +27,11 @@ def switch_to_other():
     else:
         switch_to_FAT()
 
+def get():
+    fs = pycom.bootmgr()[1]
+    print('FS:', fs)
+
 if __name__ == "__main__":
-    switch_to_other()
+    get()
+    if False:
+        switch_to_other()

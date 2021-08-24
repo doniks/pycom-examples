@@ -43,10 +43,11 @@ def th_func(delay, id):
     #     print("Start thread in thread %d" %(id))
     #     _thread.start_new_thread(th_func, (delay+1,1000+id))
     ct = 0
-    while keep_going:
+    # for i in range(10):
+    while True:
         time.sleep(delay)
         # print('id=%d\t ct=%d st=%d' % (id, ct, micropython.stack_use()) )
-        doit(id, ct, 0)
+        # doit(id, ct, 0)
         ct += 1
     print('id=%d\t ct=%d --- end' % (id, ct) )
 
@@ -54,15 +55,19 @@ def th_func(delay, id):
 # create threads with increasing delays
 def thread_test():
     mem()
-    # n = 24
-    n = 2
+    n = 24
+    # n = 2
     # GPy base core dumps at 25 in safe boot mode
     # , or 21?
+    _thread.stack_size(8*1024) # default is 5k
     print("Starting %d threads...." %(n))
     for i in range(n):
+        print('Start thread', i)
+        time.sleep(1)
         _thread.start_new_thread(th_func, (i + 1, i))
-        print(i)
-        time.sleep(0.2)
+        time.sleep(1)
+        mem()
+        time.sleep(1)
         #achine.info()
         # mem()
 
@@ -74,14 +79,15 @@ if __name__ == "__main__":
     print("start")
     _thread.stack_size(4 * 1024)
     try:
+        pass
         thread_test()
         # while True:
         #     pass
     except Exception as e:
-        print("Exception during thread_test:", e)
-    print("sleep")
-    for i in range(5):
-        print("main stack_use=", micropython.stack_use())
-        time.sleep(5)
-    print("end")
-    keep_going = False
+        print("Exception during thread_test:", type(e), e)
+    # print("sleep")
+    # for i in range(5):
+    #     print("main stack_use=", micropython.stack_use())
+    #     time.sleep(5)
+    # print("end")
+    # keep_going = False

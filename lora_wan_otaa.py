@@ -45,7 +45,39 @@ print("name", name)
 
 config = dict()
 
-c = config[id]
+config["lopy4-8454"] = {
+    "app_eui": binascii.unhexlify('70B3D57ED00299F9'),
+    "app_key": binascii.unhexlify('82B2BF49C69C4A599010200D813629F1'),
+}
+
+config["lopy4-6d34"] = {
+    "app_eui": binascii.unhexlify('70B3D57ED00299F9'),
+    "app_key": binascii.unhexlify('3FCB2D364750F3F9F4D757A63D0247A8'),
+}
+
+config["fipy-4624"] = {
+    "app_eui": binascii.unhexlify('70B3D57ED00299F9'), # the second half of this is shown by the gateway as 'mote' during join, ie D00299F9. during sending 'mote' refers to the "Device Address", seemingly a new code after every join
+    "app_key": binascii.unhexlify('2363DB43D11C47B442C55A4A55BEA878'),
+}
+
+config["fipy-2b40"] = {
+    "app_eui": binascii.unhexlify('70B3D57ED00299F9'),
+    "app_key": binascii.unhexlify('C63041521BE4AEB32760F4C985A0C6D4'),
+}
+
+config["lopy-32a8"] = {
+    # doesn't work .... prototype lopy? not even sure it's 1 or 4 ...
+    "app_eui": binascii.unhexlify('70B3D54999CAD88C'),
+    "app_key": binascii.unhexlify('C5F8AD51FB6D6F528F37A2AF9B73B1EE'),
+}
+
+config["lopy4-835c"] = {
+    "app_eui": binascii.unhexlify('70B3D57ED00299F9'),
+    "app_key": binascii.unhexlify('B7B3CB9BE083C4A002F9DF97E8411333'),
+}
+
+
+c = config[name]
 print("app_eui:" + binascii.hexlify(c["app_eui"]).decode())
 print("app_key:" + binascii.hexlify(c["app_key"]).decode())
 

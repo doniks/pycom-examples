@@ -1,6 +1,7 @@
 import time
 from network import MDNS
-# As a first step connection to network should be estbalished, e.g. via WLAN
+import binascii
+# Before setting the mDNS name, a network connection should be established, e.g. via WLAN
 
 def mdns(name=None, txt=None, instance=None):
     devname = os.uname().sysname.lower() + '-' + binascii.hexlify(machine.unique_id()).decode("utf-8")[-4:]
@@ -17,7 +18,7 @@ def mdns(name=None, txt=None, instance=None):
         MDNS.init()
     # Set the hostname and instance name of this device
     MDNS.set_name(hostname = name, instance_name = name + '-instance')
-    MDNS.add_service("telnet", MDNS.PROTO_TCP, 23)
+    MDNS.add_service("_telnet", MDNS.PROTO_TCP, 23)
     # MDNS.add_service("ftp", MDNS.PROTO_TCP, 21)
 
     # todo, maybe turn off after a timeout. timeout should be with a thread

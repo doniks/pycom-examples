@@ -1,3 +1,4 @@
+import os
 from machine import I2C
 import time
 
@@ -33,9 +34,12 @@ def scan():
 
 print(os.uname())
 # pytrack:
-sda='P22'
-scl='P21'
-i2c = I2C(2, mode=I2C.MASTER, pins=(sda, scl)) # , baudrate=100000)
+_sda='P22'
+_scl='P21'
+# IF
+_sda='P2'
+_scl='P3'
+_i2c = I2C(2, mode=I2C.MASTER, pins=(_sda, _scl)) # , baudrate=100000)
 # i2c = I2C(0, mode=I2C.MASTER)
 # i2c = I2C()
 # i2c = I2C(pins=(sda, scl), baudrate=400000 )

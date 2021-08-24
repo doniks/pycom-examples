@@ -1,2 +1,1 @@
-import os
-os.fsformat("/flash")
+import os; os.fsformat("/flash")

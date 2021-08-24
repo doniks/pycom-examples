@@ -78,7 +78,7 @@ def find_band(earfcn, verbose=False):
 
 def band():
     try:
-        mn = moni(do_return=True)
+        mn = moni(do_return=True, raise_on_error=True)
         print(mn)
         # +SQNMONI: 20416 Cc:204 Nc:16 RSRP:-80.20 CINR:0.00 RSRQ:-12.90 TAC:31 Id:222 EARFCN:3700 PWR:-59.52 PAGING:64
         # +SQNMONI: NL KPN Cc:204 Nc:08 RSRP:-90.00 CINR:18.00 RSRQ:-7.70 TAC:64503 Id:176 EARFCN:6400 PWR:-74.52 PAGING:64
@@ -139,6 +139,7 @@ _operator = {
     "20416":"T-Mobile",
     "23450":"Jersey Telecom",
     "90128":"Vodafone",
+    "90140":"1NCE",
 }
 def find_operator(mcc_mnc_tuple=None, mcc=None, mnc=None):
     if mcc_mnc_tuple is None:
@@ -323,7 +324,7 @@ def smod():
 def bmod():
     at('AT+BMOD?')
 
-def bands():
+def bands(verbose=False):
     if l is None:
         lte_init()
     import re
@@ -336,6 +337,8 @@ def bands():
             # print(line)
             # hexdump(buf=line)
             line = line.strip()
+            if verbose:
+                print(line)
             if line == '<vendor>EVK41-A configuration SQN3330 A1A3 SKY68001-31 R01</vendor>':
                 print('6 bands, I guess')
             elif line == '<vendor>GM01Q-REV4 configuration SQN3330 A1A3 SKY68001-31 17 bands R03</vendor>':
@@ -387,7 +390,7 @@ def imsi_decode(_imsi=None, verbose=True):
     op,mnc_len = find_operator(_imsi[0:6])
     if mnc_len is None:
         if verbose:
-            print("  Can't find operator")
+            print("  Can't find operator ({},{})".format(op, mnc_len))
             return (_mcc,None,None)
     _mnc=_imsi[3:3+mnc_len]
     _msin=_imsi[3+mnc_len:]
@@ -592,6 +595,14 @@ def provider(_imsi=None):
         # IP: "10.200.2.128
         # mask: 255.255.255.255"
         name = "Vodafone Int"
+        rat = ['CAT-M1', 'NB-IoT']
+    elif op == "90140":
+        apn = "iot.1nce.net"
+        # band 8 for NB-IoT in DE
+        # APN: "iot.1nce.net.mnc040.mcc901.gprs"
+        # IP: "10.229.179.185
+        # mask: 255.255.255.255"
+        name = "1NCE"
         rat = ['CAT-M1', 'NB-IoT']
     print("provider: APN=", apn, " band=", band, " DNS=", dns0, "/", dns1, " rat:", rat, " op=", op, " name=", name, sep='')
     return ( apn, band, dns0, dns1, rat, op, name )
@@ -820,16 +831,20 @@ def rsrpq(log=False, do_return=False):
     # Poor      |            < -100        < -20
     pass
 
-def moni(m=9, do_return=False, verbose=False):
-    mn = at('AT+SQNMONI=' + str(m), do_return=True, raise_on_error=False).strip()
+def moni(m=9, do_return=False, verbose=False, raise_on_error=False):
+    mn = at('AT+SQNMONI=' + str(m), do_return=True, raise_on_error=raise_on_error).strip()
     # if verbose:
     #     print(mn)
     if do_return:
         return mn
     else:
         if verbose:
+            if mn == 'ERROR':
+                print('recieved "ERROR"')
             r = mn.split(' ')
             # ['+SQNMONI:', '20416', 'Cc:204', 'Nc:16', 'RSRP:-78.70', 'CINR:0.00', 'RSRQ:-9.70', 'TAC:31', 'Id:445', 'EARFCN:3700', 'PWR:-61.22', 'PAGING:64']
+            if len(r) != 12:
+                print('unexpected response [{}] [{}]'.format(mn, r))
             assert(len(r) == 12) # for n=9. there are probably other cases, but they need code fixes below
             assert(r[0] == '+SQNMONI:')
             i = 1
@@ -1411,7 +1426,7 @@ if __name__ == "__main__":
         print("FW version test Exception:", e)
 
     if False:
-        lte_attach(band=8)
+        lte_attach()
     elif False:
         print("cfun", cfun())
         cereg()

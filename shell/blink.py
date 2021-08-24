@@ -140,6 +140,7 @@ def whoami(verbose=False, veryverbose=False):
     uid = binascii.hexlify(machine.unique_id())
     name = os.uname().sysname.lower() + '-' + uid.decode("utf-8")[-4:]
     print(name)
+    print(os.uname())
     if verbose:
         print("type", fw_type())
         for attr in dir(os.uname()):
@@ -227,7 +228,7 @@ if __name__ == "__main__":
     blink()
     # _thread.start_new_thread(blink, () )
     # time.sleep(0.1)
-    # whoami(True, True)
+    whoami(True, True)
     if False:
         pretty_reset_cause()
         pretty_wake_reason()

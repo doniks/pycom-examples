@@ -110,8 +110,8 @@ def twoscmp(value):
 
 def print_adv(adv):
     #print("mac", mac, adv)
-    s=";"
-    # s=" "
+    # s=";"
+    s=" "
     print(hexlify(adv.mac), end=s)
     print(adv.rssi, end=s)
     if adv.addr_type in AT:

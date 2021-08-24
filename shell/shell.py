@@ -203,12 +203,10 @@ def find(dir='', name=None, type=None, do_return=False):
         _find(dir, name, type, do_return)
 
 def cd(dir="/flash"):
-    import os
     pwd() # print old pwd
     if dir[-1] == '*':
         print("wildcard")
-        import ls
-        hits = ls.find(name=dir, type='d', do_return=True)
+        hits = find(name=dir, type='d', do_return=True)
         if len(hits) == 1:
             dir=hits[0]
         else:
@@ -232,7 +230,6 @@ def cd(dir="/flash"):
     pwd() # print new pwd
 
 def pwd():
-    import os
     print(os.getcwd())
 
 def _du(dir):
@@ -305,7 +302,6 @@ def mount_sd():
     from machine import SD
     sd = SD()
     # raises "OSError: the requested operation failed" on PyJTAG
-    import os
     try:
         os.mount(sd, '/sd')
     except Exception as e:
@@ -322,7 +318,6 @@ def umount_sd():
     ls('/')
 
 def cp(src, dst, force=False, _buf_size=1000):
-    import os
     try:
         src_size = os.stat(src)[6]
     except Exception as e:
@@ -386,10 +381,8 @@ def cp(src, dst, force=False, _buf_size=1000):
         raise Exception("Failed to copy. src_size=", src_size, "dst_size=", dst_size)
 
 def mv(src, dst):
-    import cp
-    import rm
-    cp.cp(src, dst)
-    rm.rm(src)
+    cp(src, dst)
+    rm(src)
 
 def rm(obj, recursive=False):
     if recursive:
@@ -404,11 +397,15 @@ def rm(obj, recursive=False):
         print('rmdir')
         rmdir(obj)
     else:
-        print("rm", obj)
-        os.unlink(obj)
+        try:
+            print("rm", obj)
+            os.unlink(obj)
+        except Exception as e:
+            print('rm failed', e)
+            if _is_dir(obj):
+                print('Use rmdir() for a single folder and rm(obj, recursive=True) for subtrees')
 
 def mkdir(dir):
-    import os
     if dir[-1] == '/':
         # strip trailing /
         os.mkdir(dir[:-1])
@@ -519,6 +516,8 @@ def _stress():
 if __name__ == "__main__":
     ls()
     ll()
+    df()
+    du()
     if False:
         tee('import pycom\npycom.heartbeat(False)\npycom.rgbled(0x070700)', '/flash/boot.py')
         tee('''

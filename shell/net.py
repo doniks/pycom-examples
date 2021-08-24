@@ -101,6 +101,7 @@ def http_get(url=None, kb=None, verbose=False, quiet=False, timeout_s=10, do_pri
         else:
             url = http_get_def_url
 
+    verbose and print("http_get:", url)
     host = None
     time_start_ms = time.ticks_ms()
     dur_send_ms = 0
@@ -126,6 +127,7 @@ def http_get(url=None, kb=None, verbose=False, quiet=False, timeout_s=10, do_pri
         ip_port = socket.getaddrinfo(host, port)[0][-1]
         # print('socket')
         s = socket.socket()
+        s.settimeout(timeout_s)
         # print('connect')
         s.connect(ip_port)
         request = bytes('GET /%s HTTP/1.0\r\nHost: %s\r\n\r\n' % (path, host), 'utf8')
@@ -138,7 +140,6 @@ def http_get(url=None, kb=None, verbose=False, quiet=False, timeout_s=10, do_pri
 
         # print('recv response')
         time_recv_ms = time.ticks_ms()
-        s.settimeout(timeout_s) # 10)
         buf = b''
         while True:
             data = s.recv(100)
