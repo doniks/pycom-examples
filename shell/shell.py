@@ -480,6 +480,14 @@ def grep(regex, str='', file='', line_numbers=False, do_return=False):
     else:
         raise Exception("Specify either a string 'str', or a filename 'file'")
 
+def reboot():
+    print('reboot')
+    import machine
+    machine.reset()
+
+def reset():
+    reboot()
+
 def _test():
     ll()
     ls('/flash')
