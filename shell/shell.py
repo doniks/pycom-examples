@@ -488,6 +488,14 @@ def reboot():
 def reset():
     reboot()
 
+def format(force=False):
+    if force:
+        print('Formatting flash ...')
+        import os
+        os.fsformat("/flash")
+    else:
+        print('Not formatting the flash without force. If you are sure you want this call "format(force=True)"')
+
 def _test():
     ll()
     ls('/flash')
