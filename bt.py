@@ -124,18 +124,18 @@ def print_adv(adv):
         print("{:<8}".format(ADT[adv.adv_type]), end=s)
     else:
         print(adv.adv_type, end=s)
-    name = bt.resolve_adv_data(adv.data, Bluetooth.ADV_NAME_CMPL)
+    name = _bt.resolve_adv_data(adv.data, Bluetooth.ADV_NAME_CMPL)
     if name:
         print(name, end=s)
     else:
-        name = bt.resolve_adv_data(adv.data, Bluetooth.ADV_NAME_SHORT)
+        name = _bt.resolve_adv_data(adv.data, Bluetooth.ADV_NAME_SHORT)
         if name:
             print(name, end=s)
         else:
             print(end=s)
     #print(adv.data) # hexlify(strip(adv.data)))
     for addt in ADDTL:
-        rd = bt.resolve_adv_data(adv.data, addt)
+        rd = _bt.resolve_adv_data(adv.data, addt)
         if rd:
             if addt == Bluetooth.ADV_FLAG:
                 print('{:08b}'.format(rd), end=s)
@@ -147,7 +147,7 @@ def print_adv(adv):
                 print(rd, sep="", end=s)
         else:
             print(end=s)
-    manuf_data = bt.resolve_adv_data(adv.data, Bluetooth.ADV_MANUFACTURER_DATA)
+    manuf_data = _bt.resolve_adv_data(adv.data, Bluetooth.ADV_MANUFACTURER_DATA)
     if manuf_data:
         # try decoding according to iBeacon encoding
         manuf4 = hexlify(manuf_data[0:4])
@@ -171,78 +171,77 @@ def print_adv(adv):
     print()
 
 def process_adv():
-    global total_adv_ct
-    debug = False
-    adv = bt.get_adv()
+    global _bt, _bt_total_adv_ct, _bt_advertisements, _bt_track_timeout_s
+    debug = True
+    adv = _bt.get_adv()
     if adv:
-        total_adv_ct += 1
+        _bt_total_adv_ct += 1
         t = time.ticks_ms() / 1000
         mac = hexlify(adv.mac)
-        if mac in Periods:
+        if mac in _bt_advertisement_periods:
             # we've seen mac before
-            if t - Periods[mac][-1][1] < track_timeout_s:
+            if t - _bt_advertisement_periods[mac][-1][1] < _bt_track_timeout_s:
                 # we're still continuously seeing mac -> update last seen period
                 if not debug:
                     print('-', end='')
-                Periods[mac][-1][1] = t
-                Periods[mac][-1][2] = adv.rssi
+                _bt_advertisement_periods[mac][-1][1] = t
+                _bt_advertisement_periods[mac][-1][2] = adv.rssi
             else:
                 # we've rediscovered it -> make a new period
                 if not debug:
                     print('+', end='')
-                Periods[mac] += [ [t, t, adv.rssi] ]
+                _bt_advertisement_periods[mac] += [ [t, t, adv.rssi] ]
         else:
             # seeing mac for the first time
-            Adv[mac] = adv
-            Periods[mac] = [ [t, t, adv.rssi] ]
+            _bt_advertisements[mac] = adv
+            _bt_advertisement_periods[mac] = [ [t, t, adv.rssi] ]
             if debug:
                 print_adv(adv)
             else:
                 print('X', end='')
 
-print("init")
-bt = Bluetooth() # antenna=Bluetooth.EXT_ANT)
-bt.callback(trigger=Bluetooth.CLIENT_CONNECTED | Bluetooth.CLIENT_DISCONNECTED | Bluetooth.CHAR_READ_EVENT | Bluetooth.CHAR_WRITE_EVENT | Bluetooth.NEW_ADV_EVENT | Bluetooth.CLIENT_CONNECTED | Bluetooth.CLIENT_DISCONNECTED | Bluetooth.CHAR_NOTIFY_EVENT, handler=bt_event_cb)
+def _bt_init():
+    global _bt, _bt_total_adv_ct, _bt_advertisements, _bt_advertisement_periods, _bt_track_timeout_s
+    print("init")
 
-time.sleep(1)
-scan_timeout_s = 2 # how long do we scan. if you want to trace then it should be long!
-track_timeout_s = 10 # after how long do we
-total_adv_ct = 0
-last_adv_time = None
-try:
-    print("start_scan")
-    bt.start_scan(scan_timeout_s)
-except Exception as e:
-    print("cannot start_scan", e)
-    print("stop_scan")
-    bt.stop_scan()
-    print("start_scan again")
-    bt.start_scan(scan_timeout_s)
 
-# Adv is a dict of advertisements, ie list of scan results
-# Adv[mac] = advertisment
-Adv = {}
-# Periods is a dictionary of a list of periods
-# Periods[mac] = [ [start,end,rssi], [], ... ]
-# for each mac (device) we have ever seen we record the periods (start, end, rssi)
-Periods = {}
+    _bt_total_adv_ct = 0
 
-while bt.isscanning():
+    # _bt_advertisements is a dict of advertisements, ie list of scan results
+    # _bt_advertisements[mac] = advertisment
+    _bt_advertisements = {}
+
+    _bt_track_timeout_s = 20
+
+    # _bt_advertisement_periods is a dictionary of a list of _bt_advertisement_periods
+    # _bt_advertisement_periods[mac] = [ [start,end,rssi], [], ... ]
+    # for each mac (device) we have ever seen we record the _bt_advertisement_periods (start, end, rssi)
+    _bt_advertisement_periods = {}
+
+    _bt = Bluetooth() # antenna=Bluetooth.EXT_ANT)
+    _bt.callback(trigger=Bluetooth.CLIENT_CONNECTED | Bluetooth.CLIENT_DISCONNECTED | Bluetooth.CHAR_READ_EVENT | Bluetooth.CHAR_WRITE_EVENT | Bluetooth.NEW_ADV_EVENT | Bluetooth.CLIENT_CONNECTED | Bluetooth.CLIENT_DISCONNECTED | Bluetooth.CHAR_NOTIFY_EVENT, handler=bt_event_cb)
+
+def _bt_start_scan(scan_timeout_s):
+    try:
+        print("start_scan", scan_timeout_s)
+        _bt.start_scan(scan_timeout_s)
+    except Exception as e:
+        print("cannot start_scan", e, 'trying to restart')
+        print("stop_scan")
+        _bt.stop_scan()
+        print("start_scan again")
+        _bt.start_scan(scan_timeout_s)
+
+def bt_scan(timeout_s=5):
+    _bt_init()
+
     time.sleep(1)
-print("scanning stopped")
+    _bt_start_scan(timeout_s)
 
-if False:
-    # print tracking results, ie periods of visibility per device
-    for k in Periods:
-        print(hexlify(k), end=":")
-        last_end = None
-        for period in Periods[k]:
-            if last_end is not None:
-                print('[', period[0] - last_end, ']', sep='', end=' ')
-            print(period[0], '+', period[1]-period[0], '@', period[2], sep='', end=' ')
-            last_end = period[1]
-        print()
-else:
+    while _bt.isscanning():
+        time.sleep(1)
+    print("scanning stopped")
+
     # print scanning results, ie, advertisment details per device
     print("mac;rssi;AT;ADT;Name;", end='')
     for addt in ADDTL:
@@ -250,20 +249,42 @@ else:
     print('len;manuf4?;uuid;major;minor;tx_pwr;major;minor;tx_pwr')
     print()
 
-    # for a in Adv:
-    #     print_adv(Adv[a])
+    # for a in _bt_advertisements:
+    #     print_adv(_bt_advertisements[a])
 
-    Adv_sorted = sorted(Adv.items(), key=lambda x: x[1][3])
-    for a in Adv_sorted:
+    adv_sorted = sorted(_bt_advertisements.items(), key=lambda x: x[1][3])
+    for a in adv_sorted:
         #print(a[0], a[1][3])
         print_adv(a[1])
 
-print("devices", len(Periods))
-print("advertisements", total_adv_ct)
+    # print("devices", len(_bt_advertisement_periods))
+    print("advertisements", _bt_total_adv_ct)
 
-if False:
-    from network import Bluetooth
-    bt = Bluetooth()
-    bt.nvram_erase()
-    import machine
-    machine.reset()
+
+def bt_track(timeout_s=120):
+    _bt_init()
+    time.sleep(1)
+    _bt_start_scan(timeout_s)
+
+    while _bt.isscanning():
+        time.sleep(1)
+    print("scanning stopped")
+
+    # print tracking results, ie _bt_advertisement_periods of visibility per device
+    for k in _bt_advertisement_periods:
+        print(hexlify(k), end=":")
+        last_end = None
+        for period in _bt_advertisement_periods[k]:
+            if last_end is not None:
+                print('[', period[0] - last_end, ']', sep='', end=' ')
+            print(period[0], '+', period[1]-period[0], '@', period[2], sep='', end=' ')
+            last_end = period[1]
+        print()
+
+def bt_stuffs():
+    if False:
+        from network import Bluetooth
+        _bt = Bluetooth()
+        _bt.nvram_erase()
+        import machine
+        machine.reset()
