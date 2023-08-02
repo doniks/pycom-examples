@@ -3,8 +3,12 @@ from machine import RTC
 import machine
 import binascii
 import pycom
+try:
+    from wlan import wlan_mode_names
+except:
+    pass
 
-def features(on=None):
+def config(on=None):
     if on is None:
         print("heartbeat   ", pycom.heartbeat_on_boot())
         print("lte         ", pycom.lte_modem_en_on_boot())
@@ -17,7 +21,12 @@ def features(on=None):
         except:
             pass
         print("wdt         ", pycom.wdt_on_boot())
-        print("wifi        ", pycom.wifi_on_boot())
+        mode='?'
+        try:
+            mode=wlan_mode_names.get(pycom.wifi_mode_on_boot(), '?')
+        except:
+            pass
+        print('wifi         {} mode:{}/{} ssid_ap:"{}" ssid_sta:"{}'.format(pycom.wifi_on_boot(), pycom.wifi_mode_on_boot(), mode, pycom.wifi_ssid_ap(), pycom.wifi_ssid_sta()))
     else:
         print("configure all features as", on)
         pycom.heartbeat_on_boot(on)
@@ -32,7 +41,7 @@ def features(on=None):
             pass
         pycom.wdt_on_boot(on)
         pycom.wifi_on_boot(on)
-        features(None)
+        config(None)
 
 
 if __name__ == '__main__':
@@ -42,7 +51,7 @@ if __name__ == '__main__':
     name = os.uname().sysname.lower() + '-' + uid[-4:]
     print(name, uid)
 
-    features()
+    config()
     if False:
         features(True) # turn everything on
         features(False) # turn everything off
