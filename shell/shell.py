@@ -496,6 +496,31 @@ def format(force=False):
     else:
         print('Not formatting the flash without force. If you are sure you want this call "format(force=True)"')
 
+def md5(obj, do_return=True):
+    import hashlib
+    import binascii
+
+    def _md5(filename):
+        digest = None
+        with open(filename) as f:
+            h = hashlib.md5()
+            h.update(f.read())
+            digest = h.digest()
+        print('{:20s} {}'.format(filename, binascii.hexlify(digest).decode()))
+        # print(binascii.hexlify(digest))
+        return digest
+
+    if obj is None:
+        md5('/flash')
+    elif _is_file(obj):
+        return _md5(obj)
+    elif _is_dir(obj):
+        for f in os.listdir(obj):
+            p = obj + '/' + f
+            md5(p)
+    else:
+        print('Dont know what to do with', str(obj))
+
 def _test():
     ll()
     ls('/flash')
