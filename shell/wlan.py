@@ -5,14 +5,16 @@ from network import WLAN
 import socket
 import binascii
 
+wlan_mode_names = {
+    WLAN.AP     : 'AP',
+    WLAN.STA    : 'STA',
+    WLAN.STA_AP : 'STA_AP',
+}
+
 known_nets_dict = {
     # 'ssid2': {'pwd': 'password2', 'wlan_config':  ('10.0.0.114', '255.255.0.0', '10.0.0.1', '10.0.0.1')}, # (ip, subnet_mask, gateway, DNS_server)
-    # 'openwireless.org' : {'pwd': '', 'sec': 0},
-    'Pycom'            : {'pwd': 'PyE!ndh0ven#', 'sec': WLAN.WPA2},
-    # 'keller'           : {'pwd': 'fritzL.ooknur1noe'},
-    'AndroidAP_1337'   : {'pwd': 'rechuyip'},
-    # 'dfdfdfd-2054'     : {'pwd': '', 'sec': None},
-    # 'wipy-wlan-349c'   : {'pwd': 'www.pycom.io', 'sec': None}
+    'openwireless.org' : {'pwd': '', 'sec': 0},
+    'wipy-wlan-349c'   : {'pwd': 'www.pycom.io', 'sec': None}
 }
 
 # w = None
@@ -76,12 +78,23 @@ def wlan_add_sta():
         w.mode(WLAN.STA_AP)
 
 def wlan_isconnected():
+    wlan_init()
+    # try:
+    #     return w.isconnected()
+    # except NameError as e:
+    #     print('Not initialized', e)
+    #     return None
     return w.isconnected()
 
-def wlan_waitconnected(timeout_s):
-    if w is None:
-        print("wlan not initialized")
-        return False
+def wlan_waitconnected(timeout_s = 10):
+    global connection
+    wlan_init()
+    # try:
+    #     w
+    # except NameError as e:
+    #     print('Not initialized', e)
+    #     return None
+
     t = time.ticks_ms()
     ct = 0;
     # while not w.isconnected():
@@ -125,7 +138,7 @@ def wlan_waitconnected(timeout_s):
 def wlan_quick(net = ''):
     wlan_init()
     if not net:
-        return wlan_quick('Pycom') or wlan_connect()
+        return wlan_quick('TP') or wlan_connect()
     else:
         # perform a quick connect, ie no scan
         wlan_add_sta()
