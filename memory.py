@@ -13,7 +13,7 @@ def mem(verbose=False):
     print("{:18} {:9}".format("heap internal free", pycom.get_free_heap()[0]))
     print("{:18} {:9}".format("heap external free", pycom.get_free_heap()[1]))
 
-def stress():
+def mem_stress():
     bufs = []
     ct = 0
     size = 1024 * 10
@@ -32,4 +32,4 @@ if __name__ == '__main__':
     print(name)
 
     mem()
-    # stress()
+    # mem_stress()
