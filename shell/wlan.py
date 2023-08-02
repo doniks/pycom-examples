@@ -10,12 +10,19 @@ wlan_mode_names = {
     WLAN.STA    : 'STA',
     WLAN.STA_AP : 'STA_AP',
 }
-
-known_nets_dict = {
+_wlan_configs = {
     # 'ssid2': {'pwd': 'password2', 'wlan_config':  ('10.0.0.114', '255.255.0.0', '10.0.0.1', '10.0.0.1')}, # (ip, subnet_mask, gateway, DNS_server)
     'openwireless.org' : {'pwd': '', 'sec': 0},
     'wipy-wlan-349c'   : {'pwd': 'www.pycom.io', 'sec': None}
 }
+try:
+    # print('importing')
+    from wlan_configs import _wlan_configs
+    # print('imported')
+    # print(_wlan_configs)
+except Exception as e:
+    # print(e)
+    pass
 
 # w = None
 connection = ""
@@ -146,7 +153,7 @@ def wlan_quick(net = ''):
             print('already connected ({})'.format(w.ssid()))
             return True
         print("Quick connect", net)
-        k = known_nets_dict[net]
+        k = _wlan_configs[net]
         sec = k['sec']
         pwd = k['pwd']
         w.connect(net, ( sec, pwd ) )
@@ -193,7 +200,7 @@ def wlan_connect(timeout_s = 20, antenna=None):
     print("Scanning for wifi networks")
     available_nets_list = w.scan()
     available_ssids_set = frozenset([n.ssid for n in available_nets_list])
-    known_ssids_set = frozenset([key for key in known_nets_dict])
+    known_ssids_set = frozenset([key for key in _wlan_configs])
     # make the intersection
     usable_ssids_set = available_ssids_set & known_ssids_set
     print("available:", len(available_ssids_set))
@@ -207,7 +214,7 @@ def wlan_connect(timeout_s = 20, antenna=None):
         try:
             net_to_use = usable_ssids_set.pop()
             print("net_to_use", net_to_use)
-            net_properties = known_nets_dict[net_to_use]
+            net_properties = _wlan_configs[net_to_use]
             pwd = net_properties['pwd']
             sec = [e.sec for e in available_nets_list if e.ssid == net_to_use][0]
             if 'wlan_config' in net_properties:
