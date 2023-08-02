@@ -200,6 +200,94 @@ def process_adv():
             else:
                 print('X', end='')
 
+
+def list_characteristics(s):
+    print('list_characteristics')
+    for c in s.characteristics():
+        print("        C:", end="")
+        uuid = c.uuid()
+        #print(type(c), end="")
+        if type(uuid) == int:
+            #print(uuid, "/", hex(uuid), end=" ")
+            print(hex(uuid), end=" ")
+            if uuid == 0x2A00:
+                print("Device Name", end=' ')
+            elif uuid == 0x2A01:
+                print("Appearance", end=' ')
+            elif uuid == 0x2A04:
+                print("Peripheral Preferred Connection Parameters", end=' ')
+            elif uuid == 0x2A05:
+                print("Service Changed", end=' ')
+            elif uuid == 0x2A19:
+                print("Battery Level", end=' ')
+            elif uuid == 0x2a24:
+                print("Model Number String", end=' ')
+            elif uuid == 0x2a29:
+                print("Manufacturer Name String", end=' ')
+            elif uuid == 0x2A37:
+                print("Heart Rate Measurement", end=' ')
+            elif uuid == 0x2A38:
+                print("Body Sensor Location", end=' ')
+            elif uuid == 0x2A39:
+                print("Heart Rate Control Point", end=' ')
+            elif uuid == 0x2b29:
+                print("Client Supported Features", end=' ')
+            elif uuid == 0x2b2a:
+                print("Database Hash", end=' ')
+        else:
+            print(hexlify(uuid), end=" ")
+
+        p = c.properties()
+        print(" i=", c.instance(), " p=", p, end=' ', sep='')
+        if p & Bluetooth.PROP_AUTH:
+            print(" auth", end='')
+        if p & Bluetooth.PROP_BROADCAST:
+            print(" bc", end='')
+        if p & Bluetooth.PROP_EXT_PROP:
+            print(" ext", end='')
+        if p & Bluetooth.PROP_INDICATE:
+            print(" ind", end='')
+        if p & Bluetooth.PROP_NOTIFY:
+            print(" ntf", end='')
+        if p & Bluetooth.PROP_READ:
+            print(" rd", end='')
+        if p & Bluetooth.PROP_WRITE:
+            print(" wr", end='')
+        if p & Bluetooth.PROP_WRITE_NR:
+            print(" nr", end='')
+        v = c.value()
+        #print(" v=", v, '/', binascii.hexlify(v), end=" ", sep=' ')
+        print(" v=", hexlify(v), end=" ", sep=' ')
+        try:
+            r = c.read()
+            print(" r=", r, '/', hexlify(r) )
+        except Exception as e:
+            print(e)
+        # c.read_descriptor(uuid)
+
+def list_services(conn):
+    print('list_services')
+    for s in conn.services():
+        print("    S:", end="")
+        #print(type(s), end="")
+        uuid = s.uuid()
+        if type(uuid) == int:
+            print(hex(uuid), end=" ")
+            if uuid == 0x1800:
+                print("Generic Access", end=" ")
+            elif uuid == 0x1801:
+                print("Generic Attribute", end=" ")
+            elif uuid == 0x180a:
+                print("Device Information", end=" ")
+            elif uuid == 0x180d:
+                print("Heart Rate", end=" ")
+            elif uuid == 0x180f:
+                print("Battery", end=" ")
+        else:
+            print(hexlify(uuid), end=" ")
+        print(s.isprimary(), s.instance())
+        list_characteristics(s)
+
 def _bt_init():
     global _bt, _bt_total_adv_ct, _bt_advertisements, _bt_advertisement_periods, _bt_track_timeout_s
     print("init")
@@ -218,8 +306,16 @@ def _bt_init():
     # for each mac (device) we have ever seen we record the _bt_advertisement_periods (start, end, rssi)
     _bt_advertisement_periods = {}
 
-    _bt = Bluetooth() # antenna=Bluetooth.EXT_ANT)
-    _bt.callback(trigger=Bluetooth.CLIENT_CONNECTED | Bluetooth.CLIENT_DISCONNECTED | Bluetooth.CHAR_READ_EVENT | Bluetooth.CHAR_WRITE_EVENT | Bluetooth.NEW_ADV_EVENT | Bluetooth.CLIENT_CONNECTED | Bluetooth.CLIENT_DISCONNECTED | Bluetooth.CHAR_NOTIFY_EVENT, handler=bt_event_cb)
+    try:
+        _bt
+    except Exception as e:
+        print(e)
+        _bt = None
+
+    if not _bt:
+        print('init _bt')
+        _bt = Bluetooth() # antenna=Bluetooth.EXT_ANT)
+        _bt.callback(trigger=Bluetooth.CLIENT_CONNECTED | Bluetooth.CLIENT_DISCONNECTED | Bluetooth.CHAR_READ_EVENT | Bluetooth.CHAR_WRITE_EVENT | Bluetooth.NEW_ADV_EVENT | Bluetooth.CLIENT_CONNECTED | Bluetooth.CLIENT_DISCONNECTED | Bluetooth.CHAR_NOTIFY_EVENT, handler=bt_event_cb)
 
 def _bt_start_scan(scan_timeout_s):
     try:
@@ -260,7 +356,6 @@ def bt_scan(timeout_s=5):
     # print("devices", len(_bt_advertisement_periods))
     print("advertisements", _bt_total_adv_ct)
 
-
 def bt_track(timeout_s=120):
     _bt_init()
     time.sleep(1)
@@ -280,6 +375,61 @@ def bt_track(timeout_s=120):
             print(period[0], '+', period[1]-period[0], '@', period[2], sep='', end=' ')
             last_end = period[1]
         print()
+
+
+# mac;rssi;AT;ADT;Name;ADV_FLAG;ADV_TX_PWR;ADV_NAME_SHORT;ADV_NAME_CMPL;ADV_DEV_CLASS;ADV_SERVICE_DATA;ADV_APPEARANCE;ADV_ADV_INT;ADV_16SRV_PART;ADV_T16SRV_CMPL;ADV_32SRV_PART;ADV_32SRV_CMPL;ADV_32SERVICE_DAr
+# b'0ad48cddbff6' -96 RANDOM NON_CONN                  b'060001092002133ef168f82e06bdf656a62b2bffa4f0c9a22352d95d86' 29 b'06000109' b'2002133ef168f82e06bdf656a62b2bff' b'a4f0' b'c9a2' b'23' 42224 51618 35
+# b'5b88202610b1' -90 RANDOM CONN      00011010 8               b'4c001006281af5649250' 10 b'4c001006' b'281af5649250' b'' b'' b''
+# b'700971885b9b' -72 PUBLIC NON_CONN                  b'75004204018066700971885b9b720971885b9a01000000000000' 26 b'75004204' b'018066700971885b9b720971885b9a01' b'0000' b'0000' b'00' 0 0 0
+
+def bt_inspect(server_mac=b'5b88202610b1'):
+    global _bt
+    _bt_init()
+    #server_adv = Adv[server_mac]
+    print(time.time(), "found", server_mac, "at", hexlify(server_mac)) # , "with", server_adv.rssi)
+    ct = 0
+    while True:
+        try:
+            # pycom.rgbled(0x000022)
+            print(time.time(), ct, "connect to", server_mac)
+            conn = _bt.connect(server_mac)
+            print(time.time(), "connected successful", ct)
+            break
+        except Exception as e:
+            print(time.time(), "failed", e)
+            _bt.disconnect_client()
+            # pycom.rgbled(0x220000)
+            time.sleep(1)
+            if ct >= 3:
+                break
+                # print("reset")
+                # machine.reset()
+        ct += 1
+    # pycom.rgbled(0x002200)
+    print(conn.isconnected())
+    print(conn.get_mtu())
+    print("Services", len(conn.services()), ":")
+    list_services(conn)
+    # print("Test:")
+    # S = 1
+    # C = 11
+    # for s in conn.services():
+    #     if s.uuid() == S:
+    #         for c in s.characteristics():
+    #             if c.uuid() == C:
+    #                 print("found", S, C)
+    #                 for ct in range(0,10):
+    #                     c.read()
+    #                     print('.', end='')
+    #                     # if ct % 100 == 0:
+    #                     #     print('[', time.time(),']:', ct, sep='')
+    #                 print(time.time())
+
+
+    print("disconnect")
+    _bt.disconnect_client()
+    print("end")
+
 
 def bt_stuffs():
     if False:
