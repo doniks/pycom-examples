@@ -269,32 +269,33 @@ def du(dir='', do_return=False):
 
 def df(part='', verbose=True):
     # NB FWIW there is also os.statvfs
-    def _df(part, verbose):
-        free_kib = os.getfree(part)
-        free_b = free_kib * 1024
-        # free_mib = free_kib / 1024
-        if verbose:
-            used_b = du(part, do_return=True)
-            used_kib = used_b / 1024
-            total_b = used_b + free_b
-            total_kib = total_b / 1024
-            error_b = 4 * 1024 * 1024 - total_b
-            print(part, ' ', free_b, ' B free (', free_kib, " KiB, ", round(free_kib / 1024,2), " MiB), ", used_b, ' B used (', round(used_kib,2), ' KiB, ', round(used_kib / 1024,2), ' MiB), ', total_b, ' B total (', total_kib, ' KiB, ', round(total_kib / 1024,2), ' MiB) [error_b=', error_b, ']', sep='')
-            # /flash 4087808 B free (3992 KiB, 3.9 MiB), 41247 B used (40.28 KiB, 0.04 MiB), 4129055 B total (4032.28 KiB, 3.94 MiB) [error_b=65249]
-            # FIXME: why do we have an error of 64K?
-            # I would expect something below 1K due to rounding since os.getfree() reports in KiB
-            # probably something like inodes, ie managing directories and filenames
-        else:
-            print(part, free_b, 'B free (', free_kib, "KiB)", sep='')
-
-    if part == '':
-        _df("/flash", verbose)
-        try:
-            _df('/sd', verbose)
-        except:
-            pass
-    else:
-        _df(part, verbose)
+    print('FIXME')
+#     def _df(part, verbose):
+#         free_kib = os.getfree(part)
+#         free_b = free_kib * 1024
+#         # free_mib = free_kib / 1024
+#         if verbose:
+#             used_b = du(part, do_return=True)
+#             used_kib = used_b / 1024
+#             total_b = used_b + free_b
+#             total_kib = total_b / 1024
+#             error_b = 4 * 1024 * 1024 - total_b
+#             print(part, ' ', free_b, ' B free (', free_kib, " KiB, ", round(free_kib / 1024,2), " MiB), ", used_b, ' B used (', round(used_kib,2), ' KiB, ', round(used_kib / 1024,2), ' MiB), ', total_b, ' B total (', total_kib, ' KiB, ', round(total_kib / 1024,2), ' MiB) [error_b=', error_b, ']', sep='')
+#             # /flash 4087808 B free (3992 KiB, 3.9 MiB), 41247 B used (40.28 KiB, 0.04 MiB), 4129055 B total (4032.28 KiB, 3.94 MiB) [error_b=65249]
+#             # FIXME: why do we have an error of 64K?
+#             # I would expect something below 1K due to rounding since os.getfree() reports in KiB
+#             # probably something like inodes, ie managing directories and filenames
+#         else:
+#             print(part, free_b, 'B free (', free_kib, "KiB)", sep='')
+# 
+#     if part == '':
+#         _df("/flash", verbose)
+#         try:
+#             _df('/sd', verbose)
+#         except:
+#             pass
+#     else:
+#         _df(part, verbose)
 
 def fs():
     print('Filesystem:', pycom.bootmgr()[1])
@@ -552,7 +553,7 @@ def _stress():
             tee(s, f, True)
             _spin(x)
         print('\b', end='')
-        print(ct, os.getfree('/flash'), len(os.listdir(d)))
+        print(ct, len(os.listdir(d)))
         ct += 1
 
 if __name__ == "__main__":
@@ -619,3 +620,4 @@ if __name__ == "__main__":
         #print(find(name='.*NB1.*', type='d', do_return=True))
         # print(find(name='.*41065.*', type=None, do_return=True))
     pass
+
